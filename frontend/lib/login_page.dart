@@ -244,8 +244,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 32),
 
-
-
                           // Register Link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -264,19 +262,18 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
-// // create a button to navigate to home page just for testing home_page.dart
-                               TextButton(
-                                 onPressed: () {
-                                   Navigator.push(
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
                                     context,
-                                     MaterialPageRoute(builder: (context) => const HomeScreen()),
+                                    MaterialPageRoute(builder: (context) => const HomeScreen()),
                                   );
-                                 },
-                                 child: const Text(
+                                },
+                                child: const Text(
                                   'Go to Home (Test) / गृह पृष्ठमा जानुहोस् (परीक्षण)',
                                   style: TextStyle(fontWeight: FontWeight.bold),
-                               ),
-                               ),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 20),

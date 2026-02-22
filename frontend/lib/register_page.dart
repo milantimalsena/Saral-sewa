@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'theme.dart';
+import 'home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -329,8 +331,26 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                        ],
+                          const SizedBox(height: 16),
+                          // Test Button - Navigate to Home Page
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HomePage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text('Test HomePage / होम पेज परीक्षण'),
+                            ),
+                          ),
+                        ], // closes Column(children: [...])
                       ),
                     ),
                   ),
