@@ -149,6 +149,8 @@ CORS_ALLOWED_ORIGINS = config(
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
+
 CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
