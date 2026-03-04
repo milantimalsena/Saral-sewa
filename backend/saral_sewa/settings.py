@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 from decouple import config
 
@@ -86,7 +85,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'authentication.CustomUser'
+# Clerk handles app user auth; Django's default User model is used only for admin.
+# Do NOT set AUTH_USER_MODEL here — authentication.ClerkUser is not an AbstractUser.
 
 LANGUAGE_CODE = 'en-us'
 
@@ -106,7 +106,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'authentication.clerk_auth.ClerkJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -127,21 +127,14 @@ REST_FRAMEWORK = {
     }
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'JTI_CLAIM': 'jti',
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'JTI_CLAIM': 'jti',
-}
+# ---------------------------------------------------------------------------
+# Clerk configuration
+# ---------------------------------------------------------------------------
+# Set these in your .env file:
+#   CLERK_FRONTEND_API=your-app.clerk.accounts.dev
+#   CLERK_SECRET_KEY=sk_test_...
+CLERK_FRONTEND_API = config('CLERK_FRONTEND_API', default='YOUR_CLERK_FRONTEND_API')
+CLERK_SECRET_KEY = config('CLERK_SECRET_KEY', default='')
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',

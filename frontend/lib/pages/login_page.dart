@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nepal Government Service Assistant',
+                  'Sign in with your Clerk account',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -66,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    enabled: !authProvider.isLoading,
                   ),
                   keyboardType: TextInputType.emailAddress,
                   enabled: !authProvider.isLoading,
@@ -93,7 +92,6 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    enabled: !authProvider.isLoading,
                   ),
                   obscureText: _obscurePassword,
                   enabled: !authProvider.isLoading,
@@ -102,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                 ElevatedButton(
                   onPressed: authProvider.isLoading
                       ? null
-                      : () => _handleLogin(context, authProvider),
+                      : () => _handleSignIn(context, authProvider),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: Theme.of(context).primaryColor,
@@ -119,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         )
                       : const Text(
-                          'Login',
+                          'Sign In',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -134,12 +132,66 @@ class _LoginPageState extends State<LoginPage> {
                       : () {
                           Navigator.of(context).pushNamed('/register');
                         },
-                  child: const Text('Don\'t have an account? Register'),
+                  child: const Text('Don\'t have an account? Sign Up'),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: authProvider.isLoading
+                      ? null
+                      : () => _handleOAuthSignIn(
+                          context,
+                          authProvider,
+                          'oauth_google',
+                        ),
+                  icon: const Icon(Icons.g_mobiledata, size: 24),
+                  label: const Text('Continue with Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                TextButton(
-                  onPressed: authProvider.isLoading ? null : () {},
-                  child: const Text('Forgot password?'),
+                OutlinedButton.icon(
+                  onPressed: authProvider.isLoading
+                      ? null
+                      : () => _handleOAuthSignIn(
+                          context,
+                          authProvider,
+                          'oauth_facebook',
+                        ),
+                  icon: const Icon(
+                    Icons.facebook,
+                    size: 24,
+                    color: Color(0xFF1877F2),
+                  ),
+                  label: const Text('Continue with Facebook'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -149,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _handleLogin(
+  Future<void> _handleSignIn(
     BuildContext context,
     AuthProvider authProvider,
   ) async {
@@ -163,21 +215,37 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final success = await authProvider.login(
+    final success = await authProvider.signIn(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Signed in successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
+  }
+
+  Future<void> _handleOAuthSignIn(
+    BuildContext context,
+    AuthProvider authProvider,
+    String strategy,
+  ) async {
+    final success = await authProvider.signInWithOAuth(strategy: strategy);
+
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Signed in successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 

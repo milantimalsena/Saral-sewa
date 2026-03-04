@@ -8,11 +8,12 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:frontend/main.dart';
+import 'package:frontend/services/auth_service.dart';
 
 void main() {
   testWidgets('Saral Sewa app loads login page', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(clerkService: ClerkService()));
 
     // Verify that the login page loads with expected elements.
     expect(find.text('Saral Sewa'), findsOneWidget);

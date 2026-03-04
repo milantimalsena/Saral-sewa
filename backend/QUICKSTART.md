@@ -23,6 +23,11 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### (Optional) Install Dev/Test Requirements
+```bash
+pip install -r requirements-dev.txt
+```
+
 ### Step 4: Create MySQL Database
 ```bash
 mysql -u root -p
@@ -57,6 +62,14 @@ python manage.py runserver
 Visit:
 - Backend: http://127.0.0.1:8000
 - Admin: http://127.0.0.1:8000/admin
+
+## Running Tests
+
+This project is configured for `pytest` (including Django integration via `pytest-django`).
+
+```bash
+pytest
+```
 
 ## Testing API Endpoints
 

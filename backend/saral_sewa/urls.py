@@ -27,15 +27,15 @@ def api_root(request):
             .link-list a:hover { background: #e8f0fe; }
             .link-list .method { display: inline-block; width: 54px; font-size: 0.75rem; font-weight: 700; color: #fff; background: #34a853; border-radius: 4px; text-align: center; padding: 2px 0; margin-right: 10px; vertical-align: middle; }
             .link-list .method.post { background: #ea8600; }
-            .link-list .method.patch { background: #8e44ad; }
             .link-list .desc { color: #888; font-size: 0.85rem; margin-left: 64px; margin-top: 2px; }
+            .badge { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
             footer { text-align: center; color: #aaa; font-size: 0.85rem; margin-top: 40px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>Saral Sewa API</h1>
-            <p class="subtitle">Backend service for the Saral Sewa application</p>
+            <p class="subtitle">Backend service &mdash; authentication powered by <strong>Clerk</strong></p>
 
             <div class="section">
                 <h2>Admin</h2>
@@ -46,50 +46,18 @@ def api_root(request):
             </div>
 
             <div class="section">
-                <h2>Authentication</h2>
-                <ul class="link-list">
-                    <li><a href="/api/register/"><span class="method post">POST</span>/api/register/</a>
-                        <p class="desc">Register a new user account</p></li>
-                    <li><a href="/api/login/"><span class="method post">POST</span>/api/login/</a>
-                        <p class="desc">Login and obtain JWT tokens</p></li>
-                    <li><a href="/api/logout/"><span class="method post">POST</span>/api/logout/</a>
-                        <p class="desc">Logout and blacklist refresh token</p></li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>User Profile</h2>
+                <h2>API Endpoints <span class="badge">Clerk Auth</span></h2>
                 <ul class="link-list">
                     <li><a href="/api/profile/"><span class="method">GET</span>/api/profile/</a>
-                        <p class="desc">Get current user profile</p></li>
-                    <li><a href="/api/profile/update/"><span class="method patch">PATCH</span>/api/profile/update/</a>
-                        <p class="desc">Update user profile</p></li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>Password Management</h2>
-                <ul class="link-list">
-                    <li><a href="/api/password-change/"><span class="method post">POST</span>/api/password-change/</a>
-                        <p class="desc">Change password (authenticated)</p></li>
-                    <li><a href="/api/password-reset-request/"><span class="method post">POST</span>/api/password-reset-request/</a>
-                        <p class="desc">Request password reset email</p></li>
-                    <li><a href="/api/password-reset/"><span class="method post">POST</span>/api/password-reset/</a>
-                        <p class="desc">Reset password with token</p></li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>Token Management</h2>
-                <ul class="link-list">
-                    <li><a href="/api/token/refresh/"><span class="method post">POST</span>/api/token/refresh/</a>
-                        <p class="desc">Refresh an access token</p></li>
+                        <p class="desc">Get current user profile (requires Clerk JWT)</p></li>
                     <li><a href="/api/verify-token/"><span class="method">GET</span>/api/verify-token/</a>
-                        <p class="desc">Verify current access token</p></li>
+                        <p class="desc">Verify Clerk session token</p></li>
+                    <li><a href="/api/health/"><span class="method">GET</span>/api/health/</a>
+                        <p class="desc">Health check (public)</p></li>
                 </ul>
             </div>
 
-            <footer>Saral Sewa &mdash; Django REST Framework Backend</footer>
+            <footer>Saral Sewa &mdash; Django REST Framework + Clerk</footer>
         </div>
     </body>
     </html>

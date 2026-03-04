@@ -1,271 +1,222 @@
 import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
-import '../services/api_service.dart';
 import '../models/user.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
+/// Indicates sign-up succeeded but the user must verify their e-mail.
+enum PendingAction { none, emailVerification }
+
 class AuthProvider extends ChangeNotifier {
-  late final AuthService _authService;
-  late final ApiService _apiService;
+  final ClerkService _clerkService;
 
   AuthStatus _status = AuthStatus.initial;
   User? _user;
   String? _errorMessage;
+  PendingAction _pendingAction = PendingAction.none;
+  String? _pendingSignUpId;
 
-  AuthProvider({ApiService? apiService}) {
-    _apiService = apiService ?? ApiService();
-    _authService = AuthService(apiService: _apiService);
+  AuthProvider({ClerkService? clerkService})
+    : _clerkService = clerkService ?? ClerkService() {
     _initializeAuth();
   }
+
+  // ---------------------------------------------------------------------------
+  // Public getters
+  // ---------------------------------------------------------------------------
 
   AuthStatus get status => _status;
   User? get user => _user;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
-  ApiService get apiService => _apiService;
+  PendingAction get pendingAction => _pendingAction;
+  String? get pendingSignUpId => _pendingSignUpId;
+  ClerkService get clerkService => _clerkService;
+
+  // ---------------------------------------------------------------------------
+  // Initialise – check for an existing Clerk session
+  // ---------------------------------------------------------------------------
 
   Future<void> _initializeAuth() async {
     try {
-      final isLoggedIn = await _authService.isLoggedIn();
-      if (isLoggedIn) {
-        await _loadUserProfile();
+      final loggedIn = await _clerkService.isLoggedIn();
+      if (loggedIn) {
+        // Attempt to refresh the token to confirm the session is still valid
+        final jwt = await _clerkService.refreshSessionToken();
+        if (jwt != null) {
+          _status = AuthStatus.authenticated;
+        } else {
+          await _clerkService.clearSession();
+          _status = AuthStatus.unauthenticated;
+        }
       } else {
         _status = AuthStatus.unauthenticated;
-        notifyListeners();
       }
-    } catch (e) {
+    } catch (_) {
       _status = AuthStatus.unauthenticated;
-      notifyListeners();
     }
+    notifyListeners();
   }
 
-  Future<void> _loadUserProfile() async {
+  // ---------------------------------------------------------------------------
+  // Sign In
+  // ---------------------------------------------------------------------------
+
+  Future<bool> signIn({required String email, required String password}) async {
     try {
-      _user = await _authService.getProfile();
-      _status = AuthStatus.authenticated;
+      _status = AuthStatus.loading;
       _errorMessage = null;
       notifyListeners();
-    } catch (e) {
-      _status = AuthStatus.unauthenticated;
-      _user = null;
-      _errorMessage = e.toString();
+
+      _user = await _clerkService.signIn(email: email, password: password);
+
+      _status = AuthStatus.authenticated;
       notifyListeners();
+      return true;
+    } on ClerkException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Sign-in failed: ${e.toString()}';
+      notifyListeners();
+      return false;
     }
   }
 
-  Future<bool> register({
+  // ---------------------------------------------------------------------------
+  // Sign Up
+  // ---------------------------------------------------------------------------
+
+  Future<bool> signUp({
     required String email,
-    required String fullName,
     required String password,
-    String? phoneNumber,
+    String? firstName,
+    String? lastName,
   }) async {
     try {
       _status = AuthStatus.loading;
       _errorMessage = null;
+      _pendingAction = PendingAction.none;
       notifyListeners();
 
-      final response = await _authService.register(
-        email: email,
-        fullName: fullName,
-        password: password,
-        phoneNumber: phoneNumber,
-      );
-
-      _user = response.user;
-      _status = AuthStatus.authenticated;
-      _errorMessage = null;
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
-      _user = null;
-      notifyListeners();
-
-      return false;
-    }
-  }
-
-  Future<bool> login({required String email, required String password}) async {
-    try {
-      _status = AuthStatus.loading;
-      _errorMessage = null;
-      notifyListeners();
-
-      final response = await _authService.login(
+      _user = await _clerkService.signUp(
         email: email,
         password: password,
-      );
-
-      _user = response.user;
-      _status = AuthStatus.authenticated;
-      _errorMessage = null;
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
-      _user = null;
-      notifyListeners();
-
-      return false;
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      _status = AuthStatus.loading;
-      notifyListeners();
-
-      await _authService.logout();
-
-      _user = null;
-      _status = AuthStatus.unauthenticated;
-      _errorMessage = null;
-      notifyListeners();
-    } catch (e) {
-      _user = null;
-      _status = AuthStatus.unauthenticated;
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
-  }
-
-  Future<bool> refreshProfile() async {
-    try {
-      _status = AuthStatus.loading;
-      notifyListeners();
-
-      _user = await _authService.getProfile();
-      _status = AuthStatus.authenticated;
-      _errorMessage = null;
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
-      notifyListeners();
-
-      return false;
-    }
-  }
-
-  Future<bool> updateProfile({
-    required String fullName,
-    String? phoneNumber,
-  }) async {
-    try {
-      _status = AuthStatus.loading;
-      notifyListeners();
-
-      _user = await _authService.updateProfile(
-        fullName: fullName,
-        phoneNumber: phoneNumber,
+        firstName: firstName,
+        lastName: lastName,
       );
 
       _status = AuthStatus.authenticated;
-      _errorMessage = null;
       notifyListeners();
-
       return true;
+    } on ClerkException catch (e) {
+      // If Clerk requires email verification, the service throws a special
+      // message containing the sign-up ID. Intercept it here.
+      if (e.message.startsWith('VERIFY_EMAIL:')) {
+        _pendingSignUpId = e.message.replaceFirst('VERIFY_EMAIL:', '');
+        _pendingAction = PendingAction.emailVerification;
+        _status = AuthStatus.unauthenticated;
+        _errorMessage = null;
+        notifyListeners();
+        return false;
+      }
+
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
+      _errorMessage = 'Sign-up failed: ${e.toString()}';
       notifyListeners();
-
       return false;
     }
   }
 
-  Future<bool> changePassword({
-    required String oldPassword,
-    required String newPassword,
-  }) async {
+  // ---------------------------------------------------------------------------
+  // Verify e-mail (OTP code sent by Clerk)
+  // ---------------------------------------------------------------------------
+
+  Future<bool> verifyEmail({required String code}) async {
+    if (_pendingSignUpId == null) return false;
+
     try {
       _status = AuthStatus.loading;
+      _errorMessage = null;
       notifyListeners();
 
-      await _authService.changePassword(
-        oldPassword: oldPassword,
-        newPassword: newPassword,
+      _user = await _clerkService.verifyEmail(
+        signUpId: _pendingSignUpId!,
+        code: code,
       );
 
+      _pendingAction = PendingAction.none;
+      _pendingSignUpId = null;
       _status = AuthStatus.authenticated;
-      _errorMessage = null;
       notifyListeners();
-
       return true;
+    } on ClerkException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
+      _errorMessage = 'Verification failed: ${e.toString()}';
       notifyListeners();
-
       return false;
     }
   }
 
-  Future<bool> requestPasswordReset({required String email}) async {
+  // ---------------------------------------------------------------------------
+  // Social / OAuth Sign In (Google, Facebook)
+  // ---------------------------------------------------------------------------
+
+  Future<bool> signInWithOAuth({required String strategy}) async {
+    try {
+      _status = AuthStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      _user = await _clerkService.signInWithOAuth(strategy: strategy);
+
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } on ClerkException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'OAuth sign-in failed: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sign Out
+  // ---------------------------------------------------------------------------
+
+  Future<void> signOut() async {
     try {
       _status = AuthStatus.loading;
       notifyListeners();
 
-      await _authService.requestPasswordReset(email: email);
-
-      _status = AuthStatus.unauthenticated;
-      _errorMessage = null;
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
-      notifyListeners();
-
-      return false;
+      await _clerkService.signOut();
+    } catch (_) {
+      // Clear local state regardless
     }
-  }
 
-  Future<bool> resetPassword({
-    required String token,
-    required String newPassword,
-  }) async {
-    try {
-      _status = AuthStatus.loading;
-      notifyListeners();
-
-      await _authService.resetPassword(token: token, newPassword: newPassword);
-
-      _status = AuthStatus.unauthenticated;
-      _errorMessage = null;
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = _formatErrorMessage(e.toString());
-      notifyListeners();
-
-      return false;
-    }
-  }
-
-  String _formatErrorMessage(String error) {
-    if (error.contains('UnauthorizedException')) {
-      return 'Invalid credentials. Please try again.';
-    } else if (error.contains('BadRequestException')) {
-      return error.replaceFirst('BadRequestException: ', '');
-    } else if (error.contains('NotFoundException')) {
-      return 'Resource not found.';
-    } else if (error.contains('ServerException')) {
-      return 'Server error. Please try again later.';
-    } else if (error.contains('Request failed')) {
-      return 'Network error. Check your connection.';
-    }
-    return error;
+    _user = null;
+    _status = AuthStatus.unauthenticated;
+    _errorMessage = null;
+    notifyListeners();
   }
 }

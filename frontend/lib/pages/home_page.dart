@@ -2,24 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  @override
-  void initState() {
-    super.initState();
-    _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    final authProvider = context.read<AuthProvider>();
-    await authProvider.refreshProfile();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +23,8 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   PopupMenuItem(
-                    child: const Text('Logout'),
-                    onTap: () => _handleLogout(context, authProvider),
+                    child: const Text('Sign Out'),
+                    onTap: () => _handleSignOut(context, authProvider),
                   ),
                 ],
               );
@@ -107,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                 _buildActionCard(
                   context,
                   'Profile',
-                  'View and edit your profile',
+                  'View your profile',
                   Icons.person,
                   () => Navigator.of(context).pushNamed('/profile'),
                 ),
@@ -148,14 +132,18 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildInfoTile('Email', user.email),
-                _buildInfoTile('Phone', user.phoneNumber ?? 'Not set'),
-                _buildInfoTile('Joined', _formatDate(user.createdAt)),
+                _buildInfoTile(
+                  'Phone',
+                  user.phoneNumber?.isNotEmpty == true
+                      ? user.phoneNumber!
+                      : 'Not set',
+                ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () =>
-                      _handleLogout(context, context.read<AuthProvider>()),
+                      _handleSignOut(context, context.read<AuthProvider>()),
                   icon: const Icon(Icons.logout),
-                  label: const Text('Logout'),
+                  label: const Text('Sign Out'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
@@ -219,24 +207,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.year}-${date.month}-${date.day}';
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  Future<void> _handleLogout(
+  Future<void> _handleSignOut(
     BuildContext context,
     AuthProvider authProvider,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -245,15 +224,18 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Logout', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
 
-    if (confirmed == true && mounted) {
-      await authProvider.logout();
-      if (mounted) {
+    if (confirmed == true) {
+      await authProvider.signOut();
+      if (context.mounted) {
         Navigator.of(context).pushReplacementNamed('/login');
       }
     }

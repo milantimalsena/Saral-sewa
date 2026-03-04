@@ -35,7 +35,8 @@ dependencies:
   http: ^1.1.0
   flutter_secure_storage: ^9.2.2
   provider: ^6.1.1
-  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.1
+  app_links: ^6.4.0
 
 dev_dependencies:
   flutter_test:
