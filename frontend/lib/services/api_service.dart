@@ -32,6 +32,16 @@ class ApiService {
     };
   }
 
+  Future<Map<String, String>> _getAuthHeadersForMultipart() async {
+    String? token = await clerkService.getSessionToken();
+    token ??= await clerkService.refreshSessionToken();
+
+    return {
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   Future<dynamic> get(String endpoint) async {
     try {
       final headers = await _getAuthHeaders();
@@ -71,6 +81,51 @@ class ApiService {
     } catch (e) {
       throw Exception('Request failed: $e');
     }
+  }
+
+  Future<dynamic> uploadDocument({
+    required String documentType,
+    required String documentNumber,
+    required String? expiryDate,
+    required String filePath,
+    required String fileName,
+  }) async {
+    try {
+      final headers = await _getAuthHeadersForMultipart();
+      final uri = Uri.parse('$_baseUrl/documents/');
+      
+      final request = http.MultipartRequest('POST', uri);
+      request.headers.addAll(headers);
+      request.fields['document_type'] = documentType;
+      request.fields['document_number'] = documentNumber;
+      request.fields['file_name'] = fileName;
+      if (expiryDate != null) {
+        request.fields['expiry_date'] = expiryDate;
+      }
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Upload failed: $e');
+    }
+  }
+
+  Future<dynamic> getDocuments() async {
+    return get('/documents/');
+  }
+
+  Future<dynamic> updateProfile({
+    String? fullName,
+    String? phoneNumber,
+    String? imageUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (fullName != null) body['full_name'] = fullName;
+    if (phoneNumber != null) body['phone_number'] = phoneNumber;
+    if (imageUrl != null) body['image_url'] = imageUrl;
+    return patch('/profile/update/', body);
   }
 
   dynamic _handleResponse(http.Response response) {

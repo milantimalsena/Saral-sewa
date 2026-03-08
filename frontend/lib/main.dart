@@ -6,6 +6,9 @@ import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
+import 'pages/landing_page.dart';
+import 'pages/services_page.dart';
+import 'pages/document_upload_page.dart';
 import 'theme.dart';
 
 void main() async {
@@ -16,7 +19,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final ClerkService clerkService;
-  const MyApp({Key? key, required this.clerkService}) : super(key: key);
+  const MyApp({super.key, required this.clerkService});
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +39,9 @@ class MyApp extends StatelessWidget {
           '/register': (context) => const RegisterPage(),
           '/home': (context) => const HomePage(),
           '/profile': (context) => const ProfilePage(),
+          '/landing': (context) => const LandingPage(),
+          '/services': (context) => const ServicesPage(),
+          '/document-upload': (context) => const DocumentUploadPage(),
         },
       ),
     );
@@ -43,13 +49,12 @@ class MyApp extends StatelessWidget {
 }
 
 class _RootPage extends StatelessWidget {
-  const _RootPage({Key? key}) : super(key: key);
+  const _RootPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        // While the provider is still initialising, show a spinner
         if (authProvider.status == AuthStatus.initial) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -57,10 +62,83 @@ class _RootPage extends StatelessWidget {
         }
 
         if (authProvider.isAuthenticated) {
-          return const HomePage();
+          return const MainNavigation();
         }
         return const LoginPage();
       },
+    );
+  }
+}
+
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({super.key});
+
+  @override
+  State<MainNavigation> createState() => _MainNavigationState();
+}
+
+class _MainNavigationState extends State<MainNavigation> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const LandingPage(),
+    const ServicesPage(),
+    const DocumentUploadPage(),
+    const ProfilePage(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppTheme.crimsonRed,
+          unselectedItemColor: Colors.grey,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.grid_view_outlined),
+              activeIcon: Icon(Icons.grid_view),
+              label: 'Services',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.upload_file_outlined),
+              activeIcon: Icon(Icons.upload_file),
+              label: 'Documents',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

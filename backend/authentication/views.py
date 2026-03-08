@@ -1,9 +1,11 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
 
-from authentication.models import ClerkUser
-from authentication.serializers import ClerkUserSerializer
+from authentication.models import ClerkUser, Document
+from authentication.serializers import ClerkUserSerializer, ClerkUserUpdateSerializer, DocumentSerializer
 
 
 class UserProfileView(generics.RetrieveAPIView):
@@ -13,6 +15,37 @@ class UserProfileView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserProfileUpdateView(generics.UpdateAPIView):
+    """Update the current user's profile."""
+    serializer_class = ClerkUserUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+class DocumentListView(generics.ListCreateAPIView):
+    """List all documents or create a new document for the user."""
+    serializer_class = DocumentSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Document.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class DocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a document."""
+    serializer_class = DocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Document.objects.filter(user=self.request.user)
 
 
 class VerifyTokenView(generics.GenericAPIView):

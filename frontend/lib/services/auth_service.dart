@@ -45,7 +45,7 @@ class ClerkService {
     final clientToken = await _storage.read(key: 'clerk_client_token');
     return {
       'Content-Type': 'application/x-www-form-urlencoded',
-      if (clientToken != null) 'Authorization': clientToken,
+      'Authorization': ?clientToken,
     };
   }
 
@@ -286,8 +286,8 @@ class ClerkService {
     final bodyParams = <String, String>{
       'email_address': email,
       'password': password,
-      if (firstName != null) 'first_name': firstName,
-      if (lastName != null) 'last_name': lastName,
+      'first_name': ?firstName,
+      'last_name': ?lastName,
     };
 
     final createRes = await http.post(

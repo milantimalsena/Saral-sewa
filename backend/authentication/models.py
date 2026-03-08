@@ -32,3 +32,30 @@ class ClerkUser(models.Model):
     def is_authenticated(self):
         """Required by DRF so request.user.is_authenticated works."""
         return True
+
+
+class Document(models.Model):
+    DOCUMENT_TYPES = [
+        ('citizenship', 'Citizenship'),
+        ('national_id', 'National ID'),
+        ('driving_license', 'Driving License'),
+        ('passport', 'Passport'),
+        ('other', 'Other'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(ClerkUser, on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
+    document_number = models.CharField(max_length=100)
+    expiry_date = models.DateField(null=True, blank=True)
+    file = models.FileField(upload_to='documents/', null=True, blank=True)
+    file_name = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'documents'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.document_type} - {self.document_number}"
