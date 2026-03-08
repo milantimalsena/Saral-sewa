@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/service_model.dart';
 import '../theme.dart';
+import 'service_detail_page.dart';
 
 class ServicesPage extends StatefulWidget {
   const ServicesPage({super.key});
@@ -12,56 +14,14 @@ class _ServicesPageState extends State<ServicesPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  final List<_Service> _allServices = [
-    const _Service(
-      icon: Icons.badge,
-      title: 'Citizenship',
-      titleNp: 'नागरिकता',
-    ),
-    const _Service(
-      icon: Icons.flight,
-      title: 'Passport',
-      titleNp: 'राहदानी',
-    ),
-    const _Service(
-      icon: Icons.directions_car,
-      title: 'Driving License',
-      titleNp: 'सवारी चालक अनुमतिपत्र',
-    ),
-    const _Service(
-      icon: Icons.credit_card,
-      title: 'PAN Card',
-      titleNp: 'पान कार्ड',
-    ),
-    const _Service(
-      icon: Icons.how_to_vote,
-      title: 'Voter ID',
-      titleNp: 'मतदाता परिचयपत्र',
-    ),
-    const _Service(
-      icon: Icons.child_friendly,
-      title: 'Birth Registration',
-      titleNp: 'जन्म दर्ता',
-    ),
-    const _Service(
-      icon: Icons.favorite,
-      title: 'Marriage Registration',
-      titleNp: 'विवाह दर्ता',
-    ),
-    const _Service(
-      icon: Icons.person,
-      title: 'National ID',
-      titleNp: 'राष्ट्रिय परिचयपत्र',
-    ),
-  ];
-
-  List<_Service> get _filteredServices {
+  List<ServiceModel> get _filteredServices {
     if (_searchQuery.isEmpty) {
-      return _allServices;
+      return ServiceData.allServices;
     }
-    return _allServices.where((service) {
-      final query = _searchQuery.toLowerCase();
-      return service.title.toLowerCase().contains(query);
+    final query = _searchQuery.toLowerCase();
+    return ServiceData.allServices.where((service) {
+      return service.title.toLowerCase().contains(query) ||
+          service.titleNp.contains(_searchQuery);
     }).toList();
   }
 
@@ -78,9 +38,7 @@ class _ServicesPageState extends State<ServicesPage> {
         child: Column(
           children: [
             _buildSearchBar(),
-            Expanded(
-              child: _buildServicesGrid(),
-            ),
+            Expanded(child: _buildServicesGrid()),
           ],
         ),
       ),
@@ -131,18 +89,11 @@ class _ServicesPageState extends State<ServicesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No services found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -158,7 +109,20 @@ class _ServicesPageState extends State<ServicesPage> {
         childAspectRatio: 0.9,
       ),
       itemCount: services.length,
-      itemBuilder: (context, index) => _ServiceCard(service: services[index]),
+      itemBuilder: (context, index) {
+        final service = services[index];
+        return _ServiceCard(
+          service: service,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ServiceDetailPage(service: service),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -169,36 +133,18 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 }
 
-class _Service {
-  final IconData icon;
-  final String title;
-  final String titleNp;
-
-  const _Service({
-    required this.icon,
-    required this.title,
-    required this.titleNp,
-  });
-}
-
 class _ServiceCard extends StatelessWidget {
-  final _Service service;
+  final ServiceModel service;
+  final VoidCallback onTap;
 
-  const _ServiceCard({required this.service});
+  const _ServiceCard({required this.service, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${service.title} - Coming soon'),
-              backgroundColor: AppTheme.deepBlue,
-            ),
-          );
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -222,11 +168,7 @@ class _ServiceCard extends StatelessWidget {
                   color: AppTheme.deepBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  service.icon,
-                  color: AppTheme.deepBlue,
-                  size: 32,
-                ),
+                child: Icon(service.icon, color: AppTheme.deepBlue, size: 32),
               ),
               const SizedBox(height: 14),
               Text(
@@ -241,10 +183,7 @@ class _ServiceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 service.titleNp,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],

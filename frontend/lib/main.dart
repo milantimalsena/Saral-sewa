@@ -1,18 +1,27 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'providers/auth_provider.dart';
 import 'services/auth_service.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
-import 'pages/landing_page.dart';
 import 'pages/services_page.dart';
 import 'pages/document_upload_page.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Use FFI-based sqflite on Windows and Linux desktop.
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   final clerkService = ClerkService();
   runApp(MyApp(clerkService: clerkService));
 }
@@ -39,7 +48,6 @@ class MyApp extends StatelessWidget {
           '/register': (context) => const RegisterPage(),
           '/home': (context) => const HomePage(),
           '/profile': (context) => const ProfilePage(),
-          '/landing': (context) => const LandingPage(),
           '/services': (context) => const ServicesPage(),
           '/document-upload': (context) => const DocumentUploadPage(),
         },
@@ -81,7 +89,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const LandingPage(),
+    const HomePage(),
     const ServicesPage(),
     const DocumentUploadPage(),
     const ProfilePage(),
@@ -90,10 +98,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [

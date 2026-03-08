@@ -372,6 +372,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
               }
             });
           },
+          isExpanded: true,
           items: DocumentType.values.map((type) {
             return DropdownMenuItem<DocumentType>(
               value: type,
@@ -379,7 +380,12 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
                 children: [
                   Icon(type.icon, size: 20, color: AppTheme.deepBlue),
                   const SizedBox(width: 12),
-                  Text('${type.displayName} (${type.displayNameNp})'),
+                  Flexible(
+                    child: Text(
+                      '${type.displayName} (${type.displayNameNp})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             );

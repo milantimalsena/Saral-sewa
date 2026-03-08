@@ -184,6 +184,38 @@ class ClerkService {
   }
 
   // -------------------------------------------------------------------------
+  // Fetch current user from active session
+  // -------------------------------------------------------------------------
+
+  Future<User?> fetchCurrentUser() async {
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(
+        Uri.parse('$_baseUrl/client?_is_native=1'),
+        headers: headers,
+      );
+      await _persistClientToken(res);
+      if (res.statusCode != 200) return null;
+
+      final body = _decode(res);
+      final client = body['response'] as Map<String, dynamic>?;
+      if (client == null) return null;
+
+      final sessionId = await getSessionId();
+      final sessions = client['sessions'] as List? ?? [];
+      for (final s in sessions) {
+        if (s['id'] == sessionId) {
+          final userData = s['user'] as Map<String, dynamic>?;
+          if (userData != null) return User.fromClerkSession(userData);
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Sign In (email + password)
   // -------------------------------------------------------------------------
 
@@ -537,7 +569,8 @@ class ClerkService {
 
     bool isMatch(Uri uri) {
       return uri.scheme == _oauthRedirectUri.scheme &&
-          (uri.host == _oauthRedirectUri.host || _oauthRedirectUri.host.isEmpty);
+          (uri.host == _oauthRedirectUri.host ||
+              _oauthRedirectUri.host.isEmpty);
     }
 
     try {

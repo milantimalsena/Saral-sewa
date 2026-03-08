@@ -45,6 +45,7 @@ class AuthProvider extends ChangeNotifier {
         // Attempt to refresh the token to confirm the session is still valid
         final jwt = await _clerkService.refreshSessionToken();
         if (jwt != null) {
+          _user = await _clerkService.fetchCurrentUser();
           _status = AuthStatus.authenticated;
         } else {
           await _clerkService.clearSession();
