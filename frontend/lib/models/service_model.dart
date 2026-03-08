@@ -110,9 +110,15 @@ class ServiceData {
           hint: 'YYYY-MM-DD',
           keyboardType: TextInputType.datetime,
         ),
-        FormFieldDef(label: 'Permanent Address', hint: 'District, Municipality, Ward'),
+        FormFieldDef(
+          label: 'Permanent Address',
+          hint: 'District, Municipality, Ward',
+        ),
         FormFieldDef(label: 'Gender', hint: 'Male / Female / Other'),
-        FormFieldDef(label: 'Citizenship Number', hint: 'Enter citizenship number'),
+        FormFieldDef(
+          label: 'Citizenship Number',
+          hint: 'Enter citizenship number',
+        ),
         FormFieldDef(
           label: 'Phone Number',
           hint: 'Enter 10-digit phone number',
@@ -156,9 +162,15 @@ class ServiceData {
           hint: 'YYYY-MM-DD',
           keyboardType: TextInputType.datetime,
         ),
-        FormFieldDef(label: 'Permanent Address', hint: 'District, Municipality, Ward'),
+        FormFieldDef(
+          label: 'Permanent Address',
+          hint: 'District, Municipality, Ward',
+        ),
         FormFieldDef(label: 'Gender', hint: 'Male / Female / Other'),
-        FormFieldDef(label: 'Citizenship Number', hint: 'Enter citizenship number'),
+        FormFieldDef(
+          label: 'Citizenship Number',
+          hint: 'Enter citizenship number',
+        ),
         FormFieldDef(
           label: 'Phone Number',
           hint: 'Enter 10-digit phone number',
@@ -203,8 +215,14 @@ class ServiceData {
           hint: 'YYYY-MM-DD',
           keyboardType: TextInputType.datetime,
         ),
-        FormFieldDef(label: 'Permanent Address', hint: 'District, Municipality, Ward'),
-        FormFieldDef(label: 'Citizenship Number', hint: 'Enter citizenship number'),
+        FormFieldDef(
+          label: 'Permanent Address',
+          hint: 'District, Municipality, Ward',
+        ),
+        FormFieldDef(
+          label: 'Citizenship Number',
+          hint: 'Enter citizenship number',
+        ),
         FormFieldDef(label: 'Blood Group', hint: 'A+ / B+ / O+ / AB+ etc.'),
         FormFieldDef(
           label: 'Phone Number',
@@ -301,14 +319,24 @@ class ServiceData {
           hint: 'YYYY-MM-DD',
           keyboardType: TextInputType.datetime,
         ),
-        FormFieldDef(label: 'Permanent Address', hint: 'District, Municipality, Ward'),
-        FormFieldDef(label: 'Citizenship Number', hint: 'Enter citizenship number'),
+        FormFieldDef(
+          label: 'Permanent Address',
+          hint: 'District, Municipality, Ward',
+        ),
+        FormFieldDef(
+          label: 'Citizenship Number',
+          hint: 'Enter citizenship number',
+        ),
         FormFieldDef(
           label: 'Phone Number',
           hint: 'Enter 10-digit phone number',
           keyboardType: TextInputType.phone,
         ),
-        FormFieldDef(label: 'Email', hint: 'Enter email address', keyboardType: TextInputType.emailAddress),
+        FormFieldDef(
+          label: 'Email',
+          hint: 'Enter email address',
+          keyboardType: TextInputType.emailAddress,
+        ),
       ],
     ),
     ServiceModel(

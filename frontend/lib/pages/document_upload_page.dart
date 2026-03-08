@@ -90,17 +90,19 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
     }
   }
 
-  Future<void> _showExpiryNotification(DocumentModel document, int daysLeft) async {
-    final message = 'Your ${document.type.displayName} will expire in $daysLeft days. Please renew it.';
-    
+  Future<void> _showExpiryNotification(
+    DocumentModel document,
+    int daysLeft,
+  ) async {
+    final message =
+        'Your ${document.type.displayName} will expire in $daysLeft days. Please renew it.';
+
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             const Icon(Icons.warning_amber_rounded, color: AppTheme.crimsonRed),
@@ -119,7 +121,10 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
     );
   }
 
-  Future<void> _callExpiryNotificationAPI(DocumentModel document, int daysLeft) async {
+  Future<void> _callExpiryNotificationAPI(
+    DocumentModel document,
+    int daysLeft,
+  ) async {
     // TODO: Replace with actual API call to backend notification service
     // Example API endpoint: POST /api/notifications/expiry
     // Body: {
@@ -187,7 +192,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         _resetForm();
       }
     } catch (e) {
@@ -309,10 +314,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
                 SizedBox(height: 4),
                 Text(
                   'Please fill in the details and upload your document',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ],
             ),
@@ -355,7 +357,10 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppTheme.crimsonRed, width: 2),
+              borderSide: const BorderSide(
+                color: AppTheme.crimsonRed,
+                width: 2,
+              ),
             ),
           ),
           validator: (value) {
@@ -425,7 +430,10 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppTheme.crimsonRed, width: 2),
+              borderSide: const BorderSide(
+                color: AppTheme.crimsonRed,
+                width: 2,
+              ),
             ),
           ),
           validator: (value) {
@@ -514,7 +522,9 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _selectedFile != null ? AppTheme.crimsonRed : AppTheme.lightGrey,
+              color: _selectedFile != null
+                  ? AppTheme.crimsonRed
+                  : AppTheme.lightGrey,
               width: _selectedFile != null ? 2 : 1,
             ),
           ),
@@ -602,10 +612,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
                         SizedBox(height: 4),
                         Text(
                           'PDF, JPG, PNG accepted',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -626,9 +633,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
         backgroundColor: AppTheme.crimsonRed,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         disabledBackgroundColor: Colors.grey,
       ),
       child: _isUploading
@@ -647,10 +652,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
                 SizedBox(width: 8),
                 Text(
                   'Upload Document',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
