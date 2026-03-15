@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../services/database_helper.dart';
 import '../models/user_profile.dart';
 import '../theme.dart';
@@ -386,8 +387,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirmed == true) {
-      final authProvider = context.read<AuthProvider>();
-      await authProvider.signOut();
+      final apiService = ApiService();
+      apiService.logout();
       if (context.mounted) {
         Navigator.of(
           context,

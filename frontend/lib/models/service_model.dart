@@ -11,6 +11,7 @@ class ServiceModel {
   final String officeNotice;
   final bool hasOnlineForm;
   final List<FormFieldDef>? formFields;
+  final String? externalUrl;
 
   const ServiceModel({
     required this.id,
@@ -23,6 +24,7 @@ class ServiceModel {
     required this.officeNotice,
     this.hasOnlineForm = false,
     this.formFields,
+    this.externalUrl,
   });
 }
 
@@ -44,35 +46,35 @@ class FormFieldDef {
 class ServiceData {
   static const List<ServiceModel> allServices = [
     ServiceModel(
-      id: 'citizenship',
-      title: 'Citizenship',
-      titleNp: 'नागरिकता',
-      icon: Icons.badge,
+      id: 'passport',
+      title: 'Passport',
+      titleNp: 'राहदानी',
+      icon: Icons.flight,
       description:
-          'Citizenship certificate is an official identity document issued by the '
-          'District Administration Office (DAO) of Nepal. It is required for all '
-          'government services, banking, property ownership, and more.',
+          'A Nepali passport (MRP) is issued by the Department of Passports, '
+          'Ministry of Foreign Affairs. It is required for international travel.',
       steps: [
+        'Fill the online application at nepalpassport.gov.np.',
+        'Pay the passport fee online or at a bank.',
         'Collect required documents.',
-        'Fill the application form (available at DAO or ward office).',
-        'Get a recommendation letter from your ward office.',
-        'Visit the District Administration Office (DAO).',
-        'Submit documents and application form.',
-        'Take photo and biometric verification.',
-        'Receive citizenship certificate.',
+        'Visit the Department of Passports or District Administration Office.',
+        'Submit documents and application receipt.',
+        'Provide biometric data and photo.',
+        'Collect passport on the scheduled date.',
       ],
       requiredDocuments: [
-        'Birth certificate',
-        'Parent citizenship copy (both father and mother)',
-        'Ward recommendation letter',
-        'Passport-size photos (2 copies)',
-        'School leaving certificate or equivalent',
-        'Marriage certificate (for married women applying via husband)',
+        'Citizenship certificate (original and copy)',
+        'Online application receipt',
+        'Payment receipt (NPR 5,000 for normal / NPR 10,000 for express)',
+        'Passport-size photos (recent)',
+        'Old passport (if renewal)',
       ],
       officeNotice:
-          'Please visit the District Administration Office (DAO) of your '
-          'permanent district with all original documents. Office hours: '
-          'Sunday–Friday, 10:00 AM – 5:00 PM (winter) / 10:00 AM – 4:00 PM (summer).',
+          'Visit the Department of Passports (Tripureshwor, Kathmandu) or your '
+          'District Administration Office. Appointment date is shown on your '
+          'online application receipt.',
+      hasOnlineForm: true,
+      externalUrl: 'https://emrtds.nepalpassport.gov.np/',
     ),
     ServiceModel(
       id: 'national_id',
@@ -103,60 +105,9 @@ class ServiceData {
           'ID enrollment center for biometric verification and photo capture. '
           'Check enrollment center locations at nid.gov.np.',
       hasOnlineForm: true,
+      externalUrl: 'https://citizenportal.donidcr.gov.np/en',
       formFields: [
         FormFieldDef(label: 'Full Name', hint: 'Enter your full name'),
-        FormFieldDef(
-          label: 'Date of Birth',
-          hint: 'YYYY-MM-DD',
-          keyboardType: TextInputType.datetime,
-        ),
-        FormFieldDef(
-          label: 'Permanent Address',
-          hint: 'District, Municipality, Ward',
-        ),
-        FormFieldDef(label: 'Gender', hint: 'Male / Female / Other'),
-        FormFieldDef(
-          label: 'Citizenship Number',
-          hint: 'Enter citizenship number',
-        ),
-        FormFieldDef(
-          label: 'Phone Number',
-          hint: 'Enter 10-digit phone number',
-          keyboardType: TextInputType.phone,
-        ),
-      ],
-    ),
-    ServiceModel(
-      id: 'passport',
-      title: 'Passport',
-      titleNp: 'राहदानी',
-      icon: Icons.flight,
-      description:
-          'A Nepali passport (MRP) is issued by the Department of Passports, '
-          'Ministry of Foreign Affairs. It is required for international travel.',
-      steps: [
-        'Fill the online application at nepalpassport.gov.np.',
-        'Pay the passport fee online or at a bank.',
-        'Collect required documents.',
-        'Visit the Department of Passports or District Administration Office.',
-        'Submit documents and application receipt.',
-        'Provide biometric data and photo.',
-        'Collect passport on the scheduled date.',
-      ],
-      requiredDocuments: [
-        'Citizenship certificate (original and copy)',
-        'Online application receipt',
-        'Payment receipt (NPR 5,000 for normal / NPR 10,000 for express)',
-        'Passport-size photos (recent)',
-        'Old passport (if renewal)',
-      ],
-      officeNotice:
-          'Visit the Department of Passports (Tripureshwor, Kathmandu) or your '
-          'District Administration Office. Appointment date is shown on your '
-          'online application receipt.',
-      hasOnlineForm: true,
-      formFields: [
-        FormFieldDef(label: 'Full Name', hint: 'As on citizenship certificate'),
         FormFieldDef(
           label: 'Date of Birth',
           hint: 'YYYY-MM-DD',
@@ -208,6 +159,7 @@ class ServiceData {
           'you. Written exam and trial dates will be assigned after application '
           'submission. Check your exam date at dotm.gov.np.',
       hasOnlineForm: true,
+      externalUrl: 'https://applydlnew.dotm.gov.np/',
       formFields: [
         FormFieldDef(label: 'Full Name', hint: 'As on citizenship certificate'),
         FormFieldDef(
@@ -230,6 +182,37 @@ class ServiceData {
           keyboardType: TextInputType.phone,
         ),
       ],
+    ),
+    ServiceModel(
+      id: 'citizenship',
+      title: 'Citizenship',
+      titleNp: 'नागरिकता',
+      icon: Icons.badge,
+      description:
+          'Citizenship certificate is an official identity document issued by the '
+          'District Administration Office (DAO) of Nepal. It is required for all '
+          'government services, banking, property ownership, and more.',
+      steps: [
+        'Collect required documents.',
+        'Fill the application form (available at DAO or ward office).',
+        'Get a recommendation letter from your ward office.',
+        'Visit the District Administration Office (DAO).',
+        'Submit documents and application form.',
+        'Take photo and biometric verification.',
+        'Receive citizenship certificate.',
+      ],
+      requiredDocuments: [
+        'Birth certificate',
+        'Parent citizenship copy (both father and mother)',
+        'Ward recommendation letter',
+        'Passport-size photos (2 copies)',
+        'School leaving certificate or equivalent',
+        'Marriage certificate (for married women applying via husband)',
+      ],
+      officeNotice:
+          'Please visit the District Administration Office (DAO) of your '
+          'permanent district with all original documents. Office hours: '
+          'Sunday–Friday, 10:00 AM – 5:00 PM (winter) / 10:00 AM – 4:00 PM (summer).',
     ),
     ServiceModel(
       id: 'birth_registration',
@@ -364,6 +347,82 @@ class ServiceData {
           'Voter registration is conducted by the Election Commission during '
           'designated periods. Visit election.gov.np or your local election '
           'office for current registration schedule.',
+    ),
+    ServiceModel(
+      id: 'police_clearance',
+      title: 'Police Clearance',
+      titleNp: 'प्रहरी क्लियरेन्स',
+      icon: Icons.local_police,
+      description:
+          'Police Clearance Certificate (PCC) is an official document issued '
+          'by Nepal Police verifying that the applicant has no criminal record.',
+      steps: [
+        'Collect required documents.',
+        'Visit the nearest Police Station.',
+        'Fill the PCC application form.',
+        'Submit documents and pay fee.',
+        'Police verification process.',
+        'Collect PCC certificate.',
+      ],
+      requiredDocuments: [
+        'Citizenship certificate (original and copy)',
+        'Passport-size photos (2 copies)',
+        'Old passport (if available)',
+        'Purpose letter (for visa/travel)',
+      ],
+      officeNotice:
+          'Apply at your nearest police station. Processing time may vary. '
+          'For urgent cases, apply at Metropolitan Police Office.',
+      externalUrl: 'https://nepalpolice.gov.np',
+    ),
+    ServiceModel(
+      id: 'immigration',
+      title: 'Immigration / Visa',
+      titleNp: 'इमिग्रेशन / भिसा',
+      icon: Icons.security,
+      description:
+          'Department of Immigration handles visa services, work permits, '
+          'and travel documents for foreign nationals in Nepal.',
+      steps: [
+        'Check visa requirements.',
+        'Collect required documents.',
+        'Submit application online or at Immigration Office.',
+        'Pay visa fee.',
+        'Attend interview if required.',
+        'Collect visa/stay permit.',
+      ],
+      requiredDocuments: [
+        'Valid passport',
+        ' passport-size photos',
+        'Proof of financial means',
+        'Travel itinerary',
+        'Visa fee payment receipt',
+      ],
+      officeNotice:
+          'Visit the Department of Immigration at Maitighar, Kathmandu. '
+          'Office hours: Sunday–Friday, 10:00 AM – 5:00 PM.',
+      externalUrl: 'https://nepaliport.immigration.gov.np',
+    ),
+    ServiceModel(
+      id: 'passport_status',
+      title: 'Passport Status',
+      titleNp: 'राहदानी स्थिति',
+      icon: Icons.search,
+      description:
+          'Check the status of your passport application online through the '
+          'Department of Passport website.',
+      steps: [
+        'Visit the passport status check portal.',
+        'Enter your application/reference number.',
+        'View current status of your passport.',
+      ],
+      requiredDocuments: [
+        'Application/Reference Number',
+      ],
+      officeNotice:
+          'Check status online at nepalpassport.gov.np using your '
+          'application reference number.',
+      externalUrl: 'https://nepalpassport.gov.np',
     ),
   ];
 }

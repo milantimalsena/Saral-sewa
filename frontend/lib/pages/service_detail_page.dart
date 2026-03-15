@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/service_model.dart';
 import '../theme.dart';
 
@@ -388,6 +389,29 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                   );
                 }),
                 const SizedBox(height: 8),
+                if (service.externalUrl != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openExternalUrl(service.externalUrl!),
+                      icon: const Icon(Icons.open_in_new),
+                      label: const Text('Open Official Website'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.deepBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You will be redirected to the official government portal',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('OR', textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                ],
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -417,6 +441,22 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
           backgroundColor: Colors.green,
         ),
       );
+    }
+  }
+
+  Future<void> _openExternalUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the link'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

@@ -45,7 +45,7 @@ class ClerkService {
     final clientToken = await _storage.read(key: 'clerk_client_token');
     return {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': ?clientToken,
+      if (clientToken != null) 'Authorization': clientToken,
     };
   }
 

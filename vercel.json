@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd frontend && flutter/bin/flutter build web --release",
+  "outputDirectory": "frontend/build/web",
+  "framework": "flutter",
+  "installCommand": "cd frontend && flutter/bin/flutter pub get",
+  "devCommand": "cd frontend && flutter/bin/flutter run -d web"
+}

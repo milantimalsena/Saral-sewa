@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'auth_service.dart';
 
 /// HTTP service for calling the Django backend.
-/// Attaches the Clerk session JWT as a Bearer token.
+/// Uses JWT token authentication.
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
   static const String androidEmulatorBaseUrl = 'http://10.0.2.2:8000/api';
 
-  final ClerkService clerkService;
+  String? _accessToken;
+  String? _refreshToken;
   late String _baseUrl;
 
-  ApiService({ClerkService? clerkService})
-    : clerkService = clerkService ?? ClerkService() {
+  ApiService() {
     _baseUrl = baseUrl;
   }
 
@@ -20,26 +20,63 @@ class ApiService {
     _baseUrl = isEmulator ? androidEmulatorBaseUrl : baseUrl;
   }
 
-  Future<Map<String, String>> _getAuthHeaders() async {
-    // Try refreshing the short-lived Clerk JWT if present
-    String? token = await clerkService.getSessionToken();
-    token ??= await clerkService.refreshSessionToken();
+  void setTokens(String? access, String? refresh) {
+    _accessToken = access;
+    _refreshToken = refresh;
+  }
 
+  String? get accessToken => _accessToken;
+
+  Future<Map<String, String>> _getAuthHeaders() async {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
     };
   }
 
   Future<Map<String, String>> _getAuthHeadersForMultipart() async {
-    String? token = await clerkService.getSessionToken();
-    token ??= await clerkService.refreshSessionToken();
-
     return {
       'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
     };
+  }
+
+  Future<dynamic> login(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/login/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      final body = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _accessToken = body['access'];
+        _refreshToken = body['refresh'];
+        return body;
+      } else {
+        throw Exception(body['error'] ?? 'Login failed');
+      }
+    } catch (e) {
+      throw Exception('Login failed: $e');
+    }
+  }
+
+  Future<void> refreshToken() async {
+    if (_refreshToken == null) return;
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/token/refresh/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh': _refreshToken}),
+      );
+      final body = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _accessToken = body['access'];
+      }
+    } catch (e) {
+      // Token refresh failed
+    }
   }
 
   Future<dynamic> get(String endpoint) async {
@@ -102,7 +139,12 @@ class ApiService {
       if (expiryDate != null) {
         request.fields['expiry_date'] = expiryDate;
       }
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      if (filePath.startsWith('blob:') || filePath.startsWith('http')) {
+        request.fields['file_path'] = filePath;
+      } else {
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -128,6 +170,11 @@ class ApiService {
     return patch('/profile/update/', body);
   }
 
+  void logout() {
+    _accessToken = null;
+    _refreshToken = null;
+  }
+
   dynamic _handleResponse(http.Response response) {
     final statusCode = response.statusCode;
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -135,7 +182,7 @@ class ApiService {
     if (statusCode >= 200 && statusCode < 300) {
       return body;
     } else if (statusCode == 401) {
-      throw UnauthorizedException(body['detail'] ?? 'Unauthorized access');
+      throw UnauthorizedException(body['detail'] ?? body['error'] ?? 'Unauthorized access');
     } else if (statusCode == 400) {
       throw BadRequestException(
         _formatErrors(body['details'] ?? body['error'] ?? 'Bad request'),

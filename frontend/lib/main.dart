@@ -61,20 +61,7 @@ class _RootPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        if (authProvider.status == AuthStatus.initial) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (authProvider.isAuthenticated) {
-          return const MainNavigation();
-        }
-        return const LoginPage();
-      },
-    );
+    return const LoginPage();
   }
 }
 
@@ -98,6 +85,18 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Saral Sewa'),
+        backgroundColor: AppTheme.crimsonRed,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => _showNotifications(context),
+          ),
+        ],
+      ),
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -143,6 +142,113 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.notifications, color: AppTheme.crimsonRed),
+                const SizedBox(width: 10),
+                const Text(
+                  'Notifications / सूचनाहरू',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const Divider(),
+            const SizedBox(height: 10),
+            _buildNotificationItem(
+              icon: Icons.warning_amber,
+              color: Colors.orange,
+              title: 'Passport Expiring',
+              subtitle: 'Your passport will expire in 30 days',
+              time: '2 hours ago',
+            ),
+            const SizedBox(height: 10),
+            _buildNotificationItem(
+              icon: Icons.check_circle,
+              color: Colors.green,
+              title: 'Document Verified',
+              subtitle: 'Your citizenship has been verified',
+              time: '1 day ago',
+            ),
+            const SizedBox(height: 10),
+            _buildNotificationItem(
+              icon: Icons.info_outline,
+              color: AppTheme.deepBlue,
+              title: 'New Service Available',
+              subtitle: 'Land Registration service is now online',
+              time: '3 days ago',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required String time,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+          ),
+        ],
       ),
     );
   }
