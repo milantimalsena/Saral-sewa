@@ -245,13 +245,17 @@ class _RegisterPageState extends State<RegisterPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 40),
-          const Icon(Icons.email_outlined, size: 64, color: AppTheme.crimsonRed),
+          const Icon(
+            Icons.email_outlined,
+            size: 64,
+            color: AppTheme.crimsonRed,
+          ),
           const SizedBox(height: 24),
           Text(
             'Verify Email',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -338,7 +342,8 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     if (mounted && success) {
-      final fullName = '${_firstNameController.text} ${_lastNameController.text}'.trim();
+      final fullName =
+          '${_firstNameController.text} ${_lastNameController.text}'.trim();
       final profile = UserProfile(
         fullName: fullName,
         email: _emailController.text.trim(),
@@ -347,10 +352,10 @@ class _RegisterPageState extends State<RegisterPage> {
         citizenshipNumber: '',
       );
       await DatabaseHelper().insertProfile(profile);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account created! Please verify your email.'),
+          content: Text('Account created and signed in successfully!'),
           backgroundColor: Colors.green,
         ),
       );

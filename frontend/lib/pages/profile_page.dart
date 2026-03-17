@@ -388,7 +388,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (confirmed == true) {
       final apiService = ApiService();
-      apiService.logout();
+      await apiService.logout();
       if (context.mounted) {
         Navigator.of(
           context,
