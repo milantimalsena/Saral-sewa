@@ -6,12 +6,14 @@ from authentication.views import (
     DocumentListView,
     DocumentDetailView,
     SimpleLoginView,
+    SimpleRegisterView,
     VerifyTokenView,
     HealthCheckView,
 )
 
 urlpatterns = [
     path('login/', SimpleLoginView.as_view(), name='simple-login'),
+    path('register/', SimpleRegisterView.as_view(), name='simple-register'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('profile/update/', UserProfileUpdateView.as_view(), name='profile-update'),

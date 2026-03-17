@@ -62,6 +62,26 @@ class ApiService {
     }
   }
 
+  Future<dynamic> register(String email, String password, String fullName) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/register/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password, 'full_name': fullName}),
+      );
+      final body = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _accessToken = body['access'];
+        _refreshToken = body['refresh'];
+        return body;
+      } else {
+        throw Exception(body['error'] ?? 'Registration failed');
+      }
+    } catch (e) {
+      throw Exception('Registration failed: $e');
+    }
+  }
+
   Future<void> refreshToken() async {
     if (_refreshToken == null) return;
     try {

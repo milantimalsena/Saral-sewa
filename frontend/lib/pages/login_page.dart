@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../services/api_service.dart';
 import '../main.dart';
+import '../theme.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,7 +19,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Saral Sewa - Login'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Saral Sewa - Login'),
+        elevation: 0,
+        backgroundColor: AppTheme.crimsonRed,
+        foregroundColor: Colors.white,
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return SingleChildScrollView(
@@ -37,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Sign in with your Clerk account',
+                  'Sign in to access government services',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -66,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'john@example.com',
                     prefixIcon: const Icon(Icons.email),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -92,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   obscureText: _obscurePassword,
@@ -104,8 +109,8 @@ class _LoginPageState extends State<LoginPage> {
                       ? null
                       : () => _handleSignIn(context, authProvider),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: Theme.of(context).primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppTheme.crimsonRed,
                   ),
                   child: authProvider.isLoading
                       ? const SizedBox(
@@ -132,9 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: authProvider.isLoading
                       ? null
                       : () {
-                          Navigator.of(context).pushNamed('/register');
+                          Navigator.of(context).pushReplacementNamed('/register');
                         },
-                  child: const Text('Don\'t have an account? Sign Up'),
+                  child: const Text("Don't have an account? Sign Up"),
                 ),
                 const SizedBox(height: 32),
                 Row(
@@ -158,40 +163,17 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: authProvider.isLoading
                       ? null
                       : () => _handleOAuthSignIn(
-                          context,
-                          authProvider,
-                          'oauth_google',
-                        ),
+                            context,
+                            authProvider,
+                            'oauth_google',
+                          ),
                   icon: const Icon(Icons.g_mobiledata, size: 24),
                   label: const Text('Continue with Google'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: Colors.grey[300]!),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: authProvider.isLoading
-                      ? null
-                      : () => _handleOAuthSignIn(
-                          context,
-                          authProvider,
-                          'oauth_facebook',
-                        ),
-                  icon: const Icon(
-                    Icons.facebook,
-                    size: 24,
-                    color: Color(0xFF1877F2),
-                  ),
-                  label: const Text('Continue with Facebook'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -217,34 +199,22 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final apiService = ApiService();
-    try {
-      final result = await apiService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+    final success = await authProvider.signIn(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
-      if (mounted) {
-        apiService.setTokens(result['access'], result['refresh']);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signed in successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainNavigation()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Signed in successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+        (route) => false,
+      );
     }
   }
 
@@ -262,8 +232,9 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainNavigation()),
+        (route) => false,
       );
     }
   }

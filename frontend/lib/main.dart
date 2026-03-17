@@ -11,6 +11,7 @@ import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/services_page.dart';
 import 'pages/document_upload_page.dart';
+import 'pages/office_locator_page.dart';
 import 'theme.dart';
 
 void main() async {
@@ -46,10 +47,11 @@ class MyApp extends StatelessWidget {
         routes: {
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
-          '/home': (context) => const HomePage(),
+          '/home': (context) => const MainNavigation(),
           '/profile': (context) => const ProfilePage(),
           '/services': (context) => const ServicesPage(),
           '/document-upload': (context) => const DocumentUploadPage(),
+          '/office-locator': (context) => const OfficeLocatorPage(),
         },
       ),
     );
@@ -78,6 +80,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     const HomePage(),
     const ServicesPage(),
+    const OfficeLocatorPage(),
     const DocumentUploadPage(),
     const ProfilePage(),
   ];
@@ -129,6 +132,11 @@ class _MainNavigationState extends State<MainNavigation> {
               icon: Icon(Icons.grid_view_outlined),
               activeIcon: Icon(Icons.grid_view),
               label: 'Services',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.map_outlined),
+              activeIcon: Icon(Icons.map),
+              label: 'Offices',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.upload_file_outlined),
@@ -244,10 +252,7 @@ class _MainNavigationState extends State<MainNavigation> {
               ],
             ),
           ),
-          Text(
-            time,
-            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-          ),
+          Text(time, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
         ],
       ),
     );

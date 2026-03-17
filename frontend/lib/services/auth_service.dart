@@ -34,6 +34,10 @@ class ClerkService {
 
   final _storage = const FlutterSecureStorage();
 
+  String _encodeBody(Map<String, String> body) {
+    return body.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+  }
+
   // -------------------------------------------------------------------------
   // Internal helpers
   // -------------------------------------------------------------------------
@@ -228,7 +232,7 @@ class ClerkService {
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ins?_is_native=1'),
       headers: headers,
-      body: {'identifier': email, 'strategy': 'password', 'password': password},
+      body: _encodeBody({'identifier': email, 'strategy': 'password', 'password': password}),
     );
 
     await _persistClientToken(createRes);
@@ -318,14 +322,14 @@ class ClerkService {
     final bodyParams = <String, String>{
       'email_address': email,
       'password': password,
-      'first_name': ?firstName,
-      'last_name': ?lastName,
+      if (firstName != null) 'first_name': firstName!,
+      if (lastName != null) 'last_name': lastName!,
     };
 
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ups?_is_native=1'),
       headers: headers,
-      body: bodyParams,
+      body: _encodeBody(bodyParams),
     );
 
     await _persistClientToken(createRes);
@@ -403,7 +407,7 @@ class ClerkService {
         '$_baseUrl/client/sign_ups/$signUpId/prepare_verification?_is_native=1',
       ),
       headers: headers,
-      body: {'strategy': 'email_code'},
+      body: _encodeBody({'strategy': 'email_code'}),
     );
   }
 
@@ -419,7 +423,7 @@ class ClerkService {
         '$_baseUrl/client/sign_ups/$signUpId/attempt_verification?_is_native=1',
       ),
       headers: headers,
-      body: {'strategy': 'email_code', 'code': code},
+      body: _encodeBody({'strategy': 'email_code', 'code': code}),
     );
 
     await _persistClientToken(res);
@@ -468,12 +472,12 @@ class ClerkService {
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ins?_is_native=1'),
       headers: headers,
-      body: {
+      body: _encodeBody({
         'strategy': strategy,
         // Redirect back into the app so the flow can complete reliably.
         'redirect_url': _oauthRedirectUri.toString(),
         'action_complete_redirect_url': _oauthRedirectUri.toString(),
-      },
+      }),
     );
 
     await _persistClientToken(createRes);
@@ -522,11 +526,11 @@ class ClerkService {
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ups?_is_native=1'),
       headers: headers,
-      body: {
+      body: _encodeBody({
         'strategy': strategy,
         'redirect_url': _oauthRedirectUri.toString(),
         'action_complete_redirect_url': _oauthRedirectUri.toString(),
-      },
+      }),
     );
 
     await _persistClientToken(createRes);

@@ -49,6 +49,51 @@ class SimpleLoginView(APIView):
         })
 
 
+class SimpleRegisterView(APIView):
+    """Simple registration with email/password using Django's auth."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        full_name = request.data.get('full_name', '')
+
+        if not email or not password:
+            return Response(
+                {'error': 'Email and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'error': 'Email already registered'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create user
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=full_name.split(' ')[0] if full_name else '',
+            last_name=' '.join(full_name.split(' ')[1:]) if full_name and ' ' in full_name else '',
+        )
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': {
+                'id': str(user.id),
+                'email': user.email,
+                'full_name': user.get_full_name() or '',
+            }
+        }, status=status.HTTP_201_CREATED)
+
+
 class UserProfileView(generics.RetrieveAPIView):
     """Return the current Clerk user's cached profile."""
     serializer_class = ClerkUserSerializer

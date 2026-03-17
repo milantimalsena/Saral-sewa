@@ -332,6 +332,7 @@ class ServiceData {
           'required to cast votes in local, provincial, and federal elections.',
       steps: [
         'Check if voter registration is open (usually before elections).',
+        'Fill the online application at applyvr.election.gov.np.',
         'Visit the nearest voter registration center.',
         'Fill the voter registration form.',
         'Submit required documents.',
@@ -347,6 +348,8 @@ class ServiceData {
           'Voter registration is conducted by the Election Commission during '
           'designated periods. Visit election.gov.np or your local election '
           'office for current registration schedule.',
+      hasOnlineForm: true,
+      externalUrl: 'https://applyvr.election.gov.np/',
     ),
     ServiceModel(
       id: 'police_clearance',
