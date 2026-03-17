@@ -1,0 +1,1 @@
+web: gunicorn saral_sewa.wsgi
