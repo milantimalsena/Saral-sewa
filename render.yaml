@@ -1,0 +1,11 @@
+database:
+  type: psql
+  plan: free
+
+services:
+  - type: web
+    name: saral-sewa
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend saral_sewa.wsgi
+    pythonVersion: "3.11"
