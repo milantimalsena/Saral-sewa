@@ -35,7 +35,12 @@ class ClerkService {
   final _storage = const FlutterSecureStorage();
 
   String _encodeBody(Map<String, String> body) {
-    return body.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+    return body.entries
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
   }
 
   // -------------------------------------------------------------------------
@@ -47,10 +52,13 @@ class ClerkService {
   /// Once we have a `__client` token we send it as the Bearer token.
   Future<Map<String, String>> _getHeaders() async {
     final clientToken = await _storage.read(key: 'clerk_client_token');
-    return {
+    final headers = <String, String>{
       'Content-Type': 'application/x-www-form-urlencoded',
-      if (clientToken != null) 'Authorization': clientToken,
     };
+    if (clientToken != null) {
+      headers['Authorization'] = clientToken;
+    }
+    return headers;
   }
 
   Map<String, dynamic> _decode(http.Response response) {
@@ -232,7 +240,11 @@ class ClerkService {
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ins?_is_native=1'),
       headers: headers,
-      body: _encodeBody({'identifier': email, 'strategy': 'password', 'password': password}),
+      body: _encodeBody({
+        'identifier': email,
+        'strategy': 'password',
+        'password': password,
+      }),
     );
 
     await _persistClientToken(createRes);
@@ -322,9 +334,13 @@ class ClerkService {
     final bodyParams = <String, String>{
       'email_address': email,
       'password': password,
-      if (firstName != null) 'first_name': firstName!,
-      if (lastName != null) 'last_name': lastName!,
     };
+    if (firstName != null) {
+      bodyParams['first_name'] = firstName;
+    }
+    if (lastName != null) {
+      bodyParams['last_name'] = lastName;
+    }
 
     final createRes = await http.post(
       Uri.parse('$_baseUrl/client/sign_ups?_is_native=1'),

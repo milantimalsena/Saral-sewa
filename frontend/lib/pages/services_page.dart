@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/service_model.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 import 'service_detail_page.dart';
 
@@ -12,17 +13,56 @@ class ServicesPage extends StatefulWidget {
 
 class _ServicesPageState extends State<ServicesPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ApiService _apiService = ApiService();
+
+  List<ServiceModel> _services = <ServiceModel>[];
+  bool _isLoading = true;
+  String? _errorMessage;
   String _searchQuery = '';
 
   List<ServiceModel> get _filteredServices {
     if (_searchQuery.isEmpty) {
-      return ServiceData.allServices;
+      return _services;
     }
     final query = _searchQuery.toLowerCase();
-    return ServiceData.allServices.where((service) {
+    return _services.where((service) {
       return service.title.toLowerCase().contains(query) ||
-          service.titleNp.contains(_searchQuery);
+          service.titleNp.toLowerCase().contains(query) ||
+          service.description.toLowerCase().contains(query);
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServices();
+  }
+
+  Future<void> _loadServices() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final data = await _apiService.fetchServices();
+      final parsed = data
+          .whereType<Map<String, dynamic>>()
+          .map(ServiceModel.fromApi)
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _services = parsed;
+        _isLoading = false;
+      });
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+    }
   }
 
   @override
@@ -38,7 +78,43 @@ class _ServicesPageState extends State<ServicesPage> {
         child: Column(
           children: [
             _buildSearchBar(),
-            Expanded(child: _buildServicesGrid()),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                  ? _buildErrorState()
+                  : _buildServicesGrid(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 48, color: Colors.redAccent),
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load services',
+              style: TextStyle(fontSize: 16, color: Colors.red[700]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage ?? 'Please try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadServices,
+              child: const Text('Retry'),
+            ),
           ],
         ),
       ),

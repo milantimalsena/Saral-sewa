@@ -125,21 +125,9 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
     DocumentModel document,
     int daysLeft,
   ) async {
-    // TODO: Replace with actual API call to backend notification service
-    // Example API endpoint: POST /api/notifications/expiry
-    // Body: {
-    //   "documentType": document.type.name,
-    //   "documentNumber": document.documentNumber,
-    //   "expiryDate": document.expiryDate!.toIso8601String(),
-    //   "daysUntilExpiry": daysLeft,
-    //   "userId": "current_user_id"
-    // }
-
-    print('=== API CALL PLACEHOLDER ===');
-    print('POST /api/notifications/expiry');
-    print('Body: ${document.toJson()}');
-    print('Days until expiry: $daysLeft');
-    print('===========================');
+    // Backend creates expiry notifications via admin checks.
+    // Triggering from mobile client is intentionally skipped.
+    return;
   }
 
   Future<void> _submitForm() async {
@@ -219,8 +207,9 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
       documentType: document.type.name,
       documentNumber: document.documentNumber,
       expiryDate: document.expiryDate?.toIso8601String().split('T').first,
-      filePath: document.filePath!,
+      filePath: document.filePath,
       fileName: document.fileName!,
+      fileBytes: _selectedFile?.bytes,
     );
   }
 
@@ -665,7 +654,9 @@ void checkAllDocumentExpiry(List<DocumentModel> documents) {
     if (doc.isExpiringSoon) {
       final days = doc.daysUntilExpiry;
       if (days != null) {
-        print('NOTIFICATION: ${doc.type.displayName} expires in $days days');
+        debugPrint(
+          'NOTIFICATION: ${doc.type.displayName} expires in $days days',
+        );
       }
     }
   }

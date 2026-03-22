@@ -11,6 +11,7 @@ import 'pages/profile_page.dart';
 import 'pages/services_page.dart';
 import 'pages/document_upload_page.dart';
 import 'pages/office_locator_page.dart';
+import 'services/api_service.dart';
 import 'theme.dart';
 
 void main() async {
@@ -52,11 +53,26 @@ class MyApp extends StatelessWidget {
 }
 
 class _RootPage extends StatelessWidget {
-  const _RootPage({super.key});
+  const _RootPage();
 
   @override
   Widget build(BuildContext context) {
-    return const LoginPage();
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        if (authProvider.status == AuthStatus.initial ||
+            authProvider.status == AuthStatus.loading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (authProvider.isAuthenticated) {
+          return const MainNavigation();
+        }
+
+        return const LoginPage();
+      },
+    );
   }
 }
 
@@ -153,65 +169,141 @@ class _MainNavigationState extends State<MainNavigation> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.notifications, color: AppTheme.crimsonRed),
-                const SizedBox(width: 10),
-                const Text(
-                  'Notifications / सूचनाहरू',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      builder: (context) => _NotificationSheet(apiService: ApiService()),
+    );
+  }
+}
+
+class _NotificationSheet extends StatelessWidget {
+  final ApiService apiService;
+
+  const _NotificationSheet({required this.apiService});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notifications, color: AppTheme.crimsonRed),
+              const SizedBox(width: 10),
+              const Text(
+                'Notifications / सूचनाहरू',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(),
+          FutureBuilder<List<dynamic>>(
+            future: apiService.fetchNotifications(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Failed to load notifications',
+                    style: TextStyle(color: Colors.red[700]),
+                  ),
+                );
+              }
+
+              final items = snapshot.data ?? <dynamic>[];
+              if (items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Text('No notifications available.'),
+                );
+              }
+
+              return SizedBox(
+                height: 320,
+                child: ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, index) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final item = items[index] as Map<String, dynamic>;
+                    final title = item['title']?.toString() ?? 'Notification';
+                    final message = item['message']?.toString() ?? '';
+                    final type =
+                        item['notification_type']?.toString() ?? 'info';
+                    final createdAt = item['created_at']?.toString() ?? '';
+                    return _NotificationItem(
+                      icon: _iconForType(type),
+                      color: _colorForType(type),
+                      title: title,
+                      subtitle: message,
+                      time: createdAt,
+                    );
+                  },
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const Divider(),
-            const SizedBox(height: 10),
-            _buildNotificationItem(
-              icon: Icons.warning_amber,
-              color: Colors.orange,
-              title: 'Passport Expiring',
-              subtitle: 'Your passport will expire in 30 days',
-              time: '2 hours ago',
-            ),
-            const SizedBox(height: 10),
-            _buildNotificationItem(
-              icon: Icons.check_circle,
-              color: Colors.green,
-              title: 'Document Verified',
-              subtitle: 'Your citizenship has been verified',
-              time: '1 day ago',
-            ),
-            const SizedBox(height: 10),
-            _buildNotificationItem(
-              icon: Icons.info_outline,
-              color: AppTheme.deepBlue,
-              title: 'New Service Available',
-              subtitle: 'Land Registration service is now online',
-              time: '3 days ago',
-            ),
-          ],
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildNotificationItem({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required String time,
-  }) {
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'expiry_warning':
+        return Icons.warning_amber;
+      case 'application_update':
+        return Icons.assignment_turned_in;
+      case 'system':
+        return Icons.settings;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  Color _colorForType(String type) {
+    switch (type) {
+      case 'expiry_warning':
+        return Colors.orange;
+      case 'application_update':
+        return Colors.green;
+      case 'system':
+        return AppTheme.deepBlue;
+      default:
+        return AppTheme.deepBlue;
+    }
+  }
+}
+
+class _NotificationItem extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final String time;
+
+  const _NotificationItem({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -245,7 +337,17 @@ class _MainNavigationState extends State<MainNavigation> {
               ],
             ),
           ),
-          Text(time, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 80,
+            child: Text(
+              time,
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

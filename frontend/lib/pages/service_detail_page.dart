@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/service_model.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 
 class ServiceDetailPage extends StatefulWidget {
@@ -17,6 +20,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   final _formKey = GlobalKey<FormState>();
   late List<TextEditingController> _formControllers;
   bool _formSubmitted = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -415,9 +419,17 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _submitForm,
-                    icon: const Icon(Icons.send),
-                    label: const Text('Submit Form'),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    icon: _isSubmitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send),
+                    label: Text(
+                      _isSubmitting ? 'Submitting...' : 'Submit Form',
+                    ),
                   ),
                 ),
               ],
@@ -428,19 +440,45 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     );
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _formSubmitted = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Form submitted successfully. Please visit the office for verification.',
+      setState(() => _isSubmitting = true);
+
+      try {
+        final formData = <String, String>{};
+        for (var i = 0; i < widget.service.formFields!.length; i++) {
+          formData[widget.service.formFields![i].label] = _formControllers[i]
+              .text
+              .trim();
+        }
+
+        await ApiService().submitApplication(
+          serviceId: widget.service.id,
+          remarks: jsonEncode(formData),
+        );
+
+        if (!mounted) return;
+        setState(() {
+          _formSubmitted = true;
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Application submitted successfully.'),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: Colors.green,
-        ),
-      );
+        );
+      } on Exception catch (e) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Submission failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

@@ -40,10 +40,18 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _initializeAuth() async {
     try {
-      final profile = await _apiService.get('/profile/');
+      final hasToken = await _apiService.hasToken();
+      if (!hasToken) {
+        _status = AuthStatus.unauthenticated;
+        notifyListeners();
+        return;
+      }
+
+      final profile = await _apiService.fetchProfile();
       _user = User.fromBackendProfile(profile as Map<String, dynamic>);
       _status = AuthStatus.authenticated;
     } catch (_) {
+      await _apiService.logout();
       _status = AuthStatus.unauthenticated;
     }
     notifyListeners();
@@ -62,15 +70,12 @@ class AuthProvider extends ChangeNotifier {
       final result =
           await _apiService.login(email, password) as Map<String, dynamic>;
       final userPayload = result['user'] as Map<String, dynamic>?;
-      if (userPayload == null) {
-        throw Exception('Missing user data from login response');
+      if (userPayload != null) {
+        _user = User.fromBackendProfile(userPayload);
+      } else {
+        final profile = await _apiService.fetchProfile();
+        _user = User.fromBackendProfile(profile as Map<String, dynamic>);
       }
-
-      _user = User.fromBackendProfile({
-        'id': userPayload['id'],
-        'email': userPayload['email'],
-        'full_name': userPayload['full_name'] ?? '',
-      });
 
       _status = AuthStatus.authenticated;
       notifyListeners();
@@ -112,6 +117,7 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     String? firstName,
     String? lastName,
+    String? phoneNumber,
   }) async {
     try {
       _status = AuthStatus.loading;
@@ -125,18 +131,15 @@ class AuthProvider extends ChangeNotifier {
       ].where((value) => value.isNotEmpty).join(' ');
 
       final result =
-          await _apiService.register(email, password, fullName)
+          await _apiService.register(email, password, fullName, phoneNumber)
               as Map<String, dynamic>;
       final userPayload = result['user'] as Map<String, dynamic>?;
-      if (userPayload == null) {
-        throw Exception('Missing user data from registration response');
+      if (userPayload != null) {
+        _user = User.fromBackendProfile(userPayload);
+      } else {
+        final profile = await _apiService.fetchProfile();
+        _user = User.fromBackendProfile(profile as Map<String, dynamic>);
       }
-
-      _user = User.fromBackendProfile({
-        'id': userPayload['id'],
-        'email': userPayload['email'],
-        'full_name': userPayload['full_name'] ?? fullName,
-      });
 
       _status = AuthStatus.authenticated;
       notifyListeners();

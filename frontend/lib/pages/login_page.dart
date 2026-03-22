@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                 ElevatedButton(
                   onPressed: authProvider.isLoading
                       ? null
-                      : () => _handleSignIn(context, authProvider),
+                      : () => _handleSignIn(authProvider),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: AppTheme.crimsonRed,
@@ -137,7 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: authProvider.isLoading
                       ? null
                       : () {
-                          Navigator.of(context).pushReplacementNamed('/register');
+                          Navigator.of(
+                            context,
+                          ).pushReplacementNamed('/register');
                         },
                   child: const Text("Don't have an account? Sign Up"),
                 ),
@@ -162,11 +164,7 @@ class _LoginPageState extends State<LoginPage> {
                 OutlinedButton.icon(
                   onPressed: authProvider.isLoading
                       ? null
-                      : () => _handleOAuthSignIn(
-                            context,
-                            authProvider,
-                            'oauth_google',
-                          ),
+                      : () => _handleOAuthSignIn(authProvider, 'oauth_google'),
                   icon: const Icon(Icons.g_mobiledata, size: 24),
                   label: const Text('Continue with Google'),
                   style: OutlinedButton.styleFrom(
@@ -185,10 +183,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _handleSignIn(
-    BuildContext context,
-    AuthProvider authProvider,
-  ) async {
+  Future<void> _handleSignIn(AuthProvider authProvider) async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -204,7 +199,8 @@ class _LoginPageState extends State<LoginPage> {
       password: _passwordController.text,
     );
 
-    if (mounted && success) {
+    if (!mounted) return;
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Signed in successfully!'),
@@ -219,13 +215,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleOAuthSignIn(
-    BuildContext context,
     AuthProvider authProvider,
     String strategy,
   ) async {
     final success = await authProvider.signInWithOAuth(strategy: strategy);
 
-    if (mounted && success) {
+    if (!mounted) return;
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Signed in successfully!'),

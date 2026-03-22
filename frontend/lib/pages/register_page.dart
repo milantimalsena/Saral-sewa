@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../main.dart';
 import '../theme.dart';
-import '../services/database_helper.dart';
-import '../models/user_profile.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -192,7 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ElevatedButton(
                   onPressed: authProvider.isLoading
                       ? null
-                      : () => _handleSignUp(context, authProvider),
+                      : () => _handleSignUp(authProvider),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: AppTheme.crimsonRed,
@@ -280,7 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ElevatedButton(
             onPressed: authProvider.isLoading
                 ? null
-                : () => _handleVerifyEmail(context, authProvider),
+                : () => _handleVerifyEmail(authProvider),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: AppTheme.crimsonRed,
@@ -308,10 +306,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Future<void> _handleSignUp(
-    BuildContext context,
-    AuthProvider authProvider,
-  ) async {
+  Future<void> _handleSignUp(AuthProvider authProvider) async {
     if (_firstNameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty) {
@@ -339,33 +334,25 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordController.text,
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
     );
 
-    if (mounted && success) {
-      final fullName =
-          '${_firstNameController.text} ${_lastNameController.text}'.trim();
-      final profile = UserProfile(
-        fullName: fullName,
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-        citizenshipNumber: '',
-      );
-      await DatabaseHelper().insertProfile(profile);
-
+    if (!mounted) return;
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Account created and signed in successfully!'),
           backgroundColor: Colors.green,
         ),
       );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+        (route) => false,
+      );
     }
   }
 
-  Future<void> _handleVerifyEmail(
-    BuildContext context,
-    AuthProvider authProvider,
-  ) async {
+  Future<void> _handleVerifyEmail(AuthProvider authProvider) async {
     if (_otpController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -380,7 +367,8 @@ class _RegisterPageState extends State<RegisterPage> {
       code: _otpController.text.trim(),
     );
 
-    if (mounted && success) {
+    if (!mounted) return;
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Email verified successfully!'),

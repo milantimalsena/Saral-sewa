@@ -2,11 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/service_model.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 import 'service_detail_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final ApiService _apiService = ApiService();
+  late Future<List<dynamic>> _servicesFuture;
+  late Future<List<dynamic>> _documentsFuture;
+  late Future<List<dynamic>> _applicationsFuture;
+  late Future<List<dynamic>> _notificationsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _servicesFuture = _apiService.fetchServices();
+    _documentsFuture = _apiService.fetchDocuments();
+    _applicationsFuture = _apiService.fetchApplications();
+    _notificationsFuture = _apiService.fetchNotifications();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +80,7 @@ class HomePage extends StatelessWidget {
                   Colors.amber[700]!,
                 ),
                 const SizedBox(height: 14),
-                _buildPopularServices(context),
+                _buildPopularServices(context, _servicesFuture),
                 const SizedBox(height: 28),
 
                 // ── My Documents ──
@@ -69,7 +90,7 @@ class HomePage extends StatelessWidget {
                   AppTheme.deepBlue,
                 ),
                 const SizedBox(height: 14),
-                _buildMyDocuments(),
+                _buildMyDocuments(_documentsFuture),
                 const SizedBox(height: 28),
 
                 // ── Application Progress ──
@@ -79,7 +100,7 @@ class HomePage extends StatelessWidget {
                   AppTheme.crimsonRed,
                 ),
                 const SizedBox(height: 14),
-                _buildApplicationProgress(),
+                _buildApplicationProgress(_applicationsFuture),
                 const SizedBox(height: 28),
 
                 // ── Notifications ──
@@ -89,7 +110,7 @@ class HomePage extends StatelessWidget {
                   Colors.orange[700]!,
                 ),
                 const SizedBox(height: 14),
-                _buildNotifications(),
+                _buildNotifications(_notificationsFuture),
                 const SizedBox(height: 32),
               ],
             ),
@@ -171,41 +192,50 @@ class HomePage extends StatelessWidget {
 
   // ─── Popular Services Grid ────────────────────────────────────────────────
 
-  Widget _buildPopularServices(BuildContext context) {
-    final popular = ServiceData.allServices
-        .where(
-          (s) => [
-            'citizenship',
-            'national_id',
-            'passport',
-            'driving_license',
-            'birth_registration',
-            'pan_card',
-          ].contains(s.id),
-        )
-        .toList();
+  Widget _buildPopularServices(
+    BuildContext context,
+    Future<List<dynamic>> future,
+  ) {
+    return FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: popular.length,
-      itemBuilder: (context, index) {
-        final service = popular[index];
-        return _ServiceTile(
-          icon: service.icon,
-          label: service.title,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ServiceDetailPage(service: service),
-              ),
+        final services = (snapshot.data ?? <dynamic>[])
+            .whereType<Map<String, dynamic>>()
+            .map(ServiceModel.fromApi)
+            .take(6)
+            .toList();
+
+        if (services.isEmpty) {
+          return const Text('No services available.');
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: services.length,
+          itemBuilder: (context, index) {
+            final service = services[index];
+            return _ServiceTile(
+              icon: service.icon,
+              label: service.title,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ServiceDetailPage(service: service),
+                  ),
+                );
+              },
             );
           },
         );
@@ -215,107 +245,206 @@ class HomePage extends StatelessWidget {
 
   // ─── My Documents ─────────────────────────────────────────────────────────
 
-  Widget _buildMyDocuments() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.lightGrey),
-      ),
-      child: Column(
-        children: [
-          _DocumentRow(
-            icon: Icons.check_circle,
-            iconColor: Colors.green,
-            title: 'Citizenship',
-            subtitle: 'Uploaded',
+  Widget _buildMyDocuments(Future<List<dynamic>> future) {
+    return FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final items = snapshot.data ?? <dynamic>[];
+        if (items.isEmpty) {
+          return const Text('No documents uploaded yet.');
+        }
+
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.lightGrey),
           ),
-          const Divider(height: 1),
-          _DocumentRow(
-            icon: Icons.warning_amber_rounded,
-            iconColor: Colors.orange,
-            title: 'Passport',
-            subtitle: 'Expires in 3 months',
+          child: Column(
+            children: List.generate(items.length, (index) {
+              final item = items[index] as Map<String, dynamic>;
+              final status =
+                  item['computed_status']?.toString() ??
+                  item['status']?.toString() ??
+                  'valid';
+              final type =
+                  item['document_type_display']?.toString() ??
+                  item['document_type']?.toString() ??
+                  'Document';
+              final subtitle = status == 'expiring'
+                  ? 'Expiring soon'
+                  : status == 'expired'
+                  ? 'Expired'
+                  : 'Uploaded';
+
+              return Column(
+                children: [
+                  _DocumentRow(
+                    icon: status == 'expiring'
+                        ? Icons.warning_amber_rounded
+                        : status == 'expired'
+                        ? Icons.error
+                        : Icons.check_circle,
+                    iconColor: status == 'expiring'
+                        ? Colors.orange
+                        : status == 'expired'
+                        ? Colors.red
+                        : Colors.green,
+                    title: type,
+                    subtitle: subtitle,
+                  ),
+                  if (index < items.length - 1) const Divider(height: 1),
+                ],
+              );
+            }),
           ),
-          const Divider(height: 1),
-          _DocumentRow(
-            icon: Icons.check_circle,
-            iconColor: Colors.green,
-            title: 'Driving License',
-            subtitle: 'Uploaded',
-          ),
-          const Divider(height: 1),
-          _DocumentRow(
-            icon: Icons.upload_file,
-            iconColor: Colors.grey,
-            title: 'PAN Card',
-            subtitle: 'Not uploaded yet',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   // ─── Application Progress ─────────────────────────────────────────────────
 
-  Widget _buildApplicationProgress() {
-    return Column(
-      children: [
-        _ApplicationCard(
-          title: 'National ID Application',
-          status: 'Pending biometric verification',
-          statusColor: Colors.orange,
-          icon: Icons.person,
-          progress: 0.6,
-        ),
-        const SizedBox(height: 12),
-        _ApplicationCard(
-          title: 'Passport Renewal',
-          status: 'Processing',
-          statusColor: AppTheme.deepBlue,
-          icon: Icons.flight,
-          progress: 0.35,
-        ),
-      ],
+  Widget _buildApplicationProgress(Future<List<dynamic>> future) {
+    return FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final items = snapshot.data ?? <dynamic>[];
+        if (items.isEmpty) {
+          return const Text('No applications submitted yet.');
+        }
+
+        return Column(
+          children: List.generate(items.length, (index) {
+            final item = items[index] as Map<String, dynamic>;
+            final service = item['service_name']?.toString() ?? 'Application';
+            final status =
+                item['status_display']?.toString() ??
+                item['status']?.toString() ??
+                'Pending';
+            final statusRaw = item['status']?.toString() ?? 'pending';
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == items.length - 1 ? 0 : 12,
+              ),
+              child: _ApplicationCard(
+                title: service,
+                status: status,
+                statusColor: _statusColor(statusRaw),
+                icon: Icons.assignment,
+                progress: _statusProgress(statusRaw),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 
   // ─── Notifications ────────────────────────────────────────────────────────
 
-  Widget _buildNotifications() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.lightGrey),
-      ),
-      child: Column(
-        children: [
-          _NotificationRow(
-            icon: Icons.warning_amber_rounded,
-            iconColor: Colors.orange,
-            text: 'Your passport expires in 30 days',
-            time: '2 hours ago',
+  Widget _buildNotifications(Future<List<dynamic>> future) {
+    return FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final items = snapshot.data ?? <dynamic>[];
+        if (items.isEmpty) {
+          return const Text('No notifications available.');
+        }
+
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.lightGrey),
           ),
-          const Divider(height: 1),
-          _NotificationRow(
-            icon: Icons.check_circle,
-            iconColor: Colors.green,
-            text: 'National ID form submitted successfully',
-            time: '1 day ago',
+          child: Column(
+            children: List.generate(items.length, (index) {
+              final item = items[index] as Map<String, dynamic>;
+              final type = item['notification_type']?.toString() ?? 'info';
+              return Column(
+                children: [
+                  _NotificationRow(
+                    icon: _notificationIcon(type),
+                    iconColor: _notificationColor(type),
+                    text: item['message']?.toString() ?? '',
+                    time: item['created_at']?.toString() ?? '',
+                  ),
+                  if (index < items.length - 1) const Divider(height: 1),
+                ],
+              );
+            }),
           ),
-          const Divider(height: 1),
-          _NotificationRow(
-            icon: Icons.info,
-            iconColor: AppTheme.deepBlue,
-            text: 'New: Online PAN registration available',
-            time: '3 days ago',
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'processing':
+        return AppTheme.deepBlue;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  double _statusProgress(String status) {
+    switch (status) {
+      case 'approved':
+        return 1;
+      case 'processing':
+        return 0.6;
+      case 'rejected':
+        return 1;
+      default:
+        return 0.2;
+    }
+  }
+
+  IconData _notificationIcon(String type) {
+    switch (type) {
+      case 'expiry_warning':
+        return Icons.warning_amber_rounded;
+      case 'application_update':
+        return Icons.assignment_turned_in;
+      case 'system':
+        return Icons.settings;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _notificationColor(String type) {
+    switch (type) {
+      case 'expiry_warning':
+        return Colors.orange;
+      case 'application_update':
+        return Colors.green;
+      case 'system':
+        return AppTheme.deepBlue;
+      default:
+        return AppTheme.deepBlue;
+    }
   }
 
   // ─── Sign Out ─────────────────────────────────────────────────────────────

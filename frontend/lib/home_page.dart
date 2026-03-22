@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFFDC143C),
-                      const Color(0xFFDC143C).withOpacity(0.7),
+                      const Color(0xFFDC143C).withValues(alpha: 0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 200,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
                     ),
@@ -441,8 +441,8 @@ class _ServiceCategoryCardState extends State<ServiceCategoryCard>
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
                 colors: [
-                  widget.color.withOpacity(0.08),
-                  widget.color.withOpacity(0.04),
+                  widget.color.withValues(alpha: 0.08),
+                  widget.color.withValues(alpha: 0.04),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -454,7 +454,7 @@ class _ServiceCategoryCardState extends State<ServiceCategoryCard>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: widget.color.withOpacity(0.15),
+                    color: widget.color.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(widget.icon, color: widget.color, size: 32),

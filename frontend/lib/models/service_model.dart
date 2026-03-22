@@ -26,6 +26,63 @@ class ServiceModel {
     this.formFields,
     this.externalUrl,
   });
+
+  factory ServiceModel.fromApi(Map<String, dynamic> json) {
+    final name = json['name']?.toString() ?? 'Service';
+    final nameNepali = json['name_nepali']?.toString() ?? '';
+    final description = json['description']?.toString() ?? '';
+    final requiredDocsRaw = json['required_documents']?.toString() ?? '';
+    final requiredDocs = requiredDocsRaw
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final generatedSteps = <String>[
+      'Review required documents for $name.',
+      'Prepare originals and photocopies before submitting.',
+      'Submit your application at the relevant office or online portal.',
+      'Track status from My Applications section.',
+    ];
+
+    return ServiceModel(
+      id: json['id']?.toString() ?? name.toLowerCase().replaceAll(' ', '_'),
+      title: name,
+      titleNp: nameNepali,
+      icon: _iconForService(name),
+      description: description,
+      steps: generatedSteps,
+      requiredDocuments: requiredDocs,
+      officeNotice:
+          'Visit the concerned ${json['department'] ?? 'government'} office if biometric or in-person verification is required.',
+      hasOnlineForm: true,
+      formFields: const [
+        FormFieldDef(label: 'Applicant Full Name', hint: 'Enter full name'),
+        FormFieldDef(
+          label: 'Phone Number',
+          hint: 'Enter phone number',
+          keyboardType: TextInputType.phone,
+        ),
+        FormFieldDef(
+          label: 'Additional Notes',
+          hint: 'Optional context for your application',
+          isRequired: false,
+        ),
+      ],
+    );
+  }
+
+  static IconData _iconForService(String name) {
+    final value = name.toLowerCase();
+    if (value.contains('passport')) return Icons.flight;
+    if (value.contains('license')) return Icons.directions_car;
+    if (value.contains('citizenship')) return Icons.badge;
+    if (value.contains('id')) return Icons.person;
+    if (value.contains('birth')) return Icons.child_friendly;
+    if (value.contains('marriage')) return Icons.favorite;
+    if (value.contains('land')) return Icons.home_work;
+    return Icons.miscellaneous_services;
+  }
 }
 
 class FormFieldDef {
@@ -419,9 +476,7 @@ class ServiceData {
         'Enter your application/reference number.',
         'View current status of your passport.',
       ],
-      requiredDocuments: [
-        'Application/Reference Number',
-      ],
+      requiredDocuments: ['Application/Reference Number'],
       officeNotice:
           'Check status online at nepalpassport.gov.np using your '
           'application reference number.',

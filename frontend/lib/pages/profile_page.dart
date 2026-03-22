@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
-import '../services/database_helper.dart';
-import '../models/user_profile.dart';
 import '../theme.dart';
 import 'login_page.dart';
 
@@ -22,10 +18,9 @@ class _ProfilePageState extends State<ProfilePage> {
   final _addressController = TextEditingController();
   final _citizenshipController = TextEditingController();
 
-  final _dbHelper = DatabaseHelper();
+  final _apiService = ApiService();
   bool _isLoading = false;
   bool _isSaving = false;
-  UserProfile? _existingProfile;
 
   @override
   void initState() {
@@ -36,15 +31,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
     try {
-      final profile = await _dbHelper.getProfile();
-      if (profile != null) {
-        _existingProfile = profile;
-        _fullNameController.text = profile.fullName;
-        _emailController.text = profile.email;
-        _phoneController.text = profile.phone;
-        _addressController.text = profile.address;
-        _citizenshipController.text = profile.citizenshipNumber;
-      }
+      final profile = await _apiService.fetchProfile() as Map<String, dynamic>;
+      _fullNameController.text = profile['full_name']?.toString() ?? '';
+      _emailController.text = profile['email']?.toString() ?? '';
+      _phoneController.text =
+          profile['phone_number']?.toString() ??
+          profile['phone']?.toString() ??
+          '';
+      _addressController.text = profile['address']?.toString() ?? '';
+      _citizenshipController.text =
+          profile['citizenship_number']?.toString() ?? '';
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,22 +60,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
     setState(() => _isSaving = true);
     try {
-      final profile = UserProfile(
-        id: _existingProfile?.id,
+      await _apiService.updateProfile(
         fullName: _fullNameController.text.trim(),
-        email: _emailController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
         phone: _phoneController.text.trim(),
         address: _addressController.text.trim(),
         citizenshipNumber: _citizenshipController.text.trim(),
-        createdAt: _existingProfile?.createdAt,
       );
-
-      if (_existingProfile != null) {
-        await _dbHelper.updateProfile(profile);
-      } else {
-        final id = await _dbHelper.insertProfile(profile);
-        _existingProfile = profile.copyWith(id: id);
-      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -238,8 +225,9 @@ class _ProfilePageState extends State<ProfilePage> {
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Email is required';
                 final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                if (!emailRegex.hasMatch(v.trim()))
+                if (!emailRegex.hasMatch(v.trim())) {
                   return 'Enter a valid email';
+                }
                 return null;
               },
             ),
@@ -387,8 +375,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirmed == true) {
-      final apiService = ApiService();
-      await apiService.logout();
+      await _apiService.logout();
       if (context.mounted) {
         Navigator.of(
           context,
