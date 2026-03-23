@@ -7,5 +7,5 @@ services:
     name: saral-sewa
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: gunicorn --chdir backend saral_sewa.wsgi
+    startCommand: gunicorn --chdir backend saralsewa.wsgi:application
     pythonVersion: "3.11"

@@ -1,1 +1,1 @@
-web: gunicorn --chdir backend saral_sewa.wsgi
+web: gunicorn --chdir backend saralsewa.wsgi:application
