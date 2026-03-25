@@ -39,7 +39,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             'id', 'user', 'user_name', 'document_type', 'document_type_display',
-            'document_number', 'issue_date', 'expiry_date', 'status',
+            'document_number', 'issue_date', 'expiry_date', 'document_file', 'status',
             'computed_status', 'notes', 'created_at', 'updated_at',
         ]
 
@@ -167,10 +167,10 @@ class UserDocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             'id', 'document_type', 'document_type_display', 'document_number',
-            'issue_date', 'expiry_date', 'file', 'status', 'computed_status',
+            'issue_date', 'expiry_date', 'document_file', 'status', 'computed_status',
             'notes', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'status', 'computed_status', 'created_at', 'updated_at']
 
     def get_document_type_display(self, obj):
         return obj.get_document_type_display()

@@ -420,10 +420,16 @@ class ApiService {
 
       if (fileBytes != null) {
         request.files.add(
-          http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+          http.MultipartFile.fromBytes(
+            'document_file',
+            fileBytes,
+            filename: fileName,
+          ),
         );
       } else if (filePath != null && filePath.isNotEmpty) {
-        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+        request.files.add(
+          await http.MultipartFile.fromPath('document_file', filePath),
+        );
       } else {
         throw BadRequestException('Document file is required');
       }

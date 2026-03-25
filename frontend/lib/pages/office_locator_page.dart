@@ -122,6 +122,17 @@ const List<GovernmentOffice> _sampleOffices = [
     longitude: 85.3260,
     icon: Icons.landscape,
   ),
+  GovernmentOffice(
+    id: 'dao_itahari',
+    name: 'Itahari District Administration Office',
+    nameNp: 'इटहरी जिल्ला प्रशासन कार्यालय',
+    type: 'District Administration Office',
+    address: 'Itahari, Sunsari',
+    contact: '+977-25-520000',
+    latitude: 26.6637,
+    longitude: 87.2718,
+    icon: Icons.account_balance,
+  ),
 ];
 
 /// Office Locator page – Google Maps with government office markers.
@@ -137,11 +148,15 @@ class _OfficeLocatorPageState extends State<OfficeLocatorPage> {
 
   // Default center: Kathmandu
   static const LatLng _defaultCenter = LatLng(27.7000, 85.3240);
+  // Fallback: Itahari
+  static const LatLng _itahariCenter = LatLng(26.6637, 87.2718);
 
   Position? _currentPosition;
   bool _loadingLocation = true;
   String? _locationError;
   String _selectedFilter = 'All';
+  GovernmentOffice? _nearestOffice;
+  double? _nearestDistance;
 
   final Set<Marker> _markers = {};
 
@@ -206,6 +221,7 @@ class _OfficeLocatorPageState extends State<OfficeLocatorPage> {
       setState(() {
         _currentPosition = position;
         _loadingLocation = false;
+        _buildMarkers();
       });
 
       // Animate to user location
@@ -220,21 +236,55 @@ class _OfficeLocatorPageState extends State<OfficeLocatorPage> {
       setState(() {
         _loadingLocation = false;
         _locationError = 'Could not get location';
+        _buildMarkers();
       });
     }
   }
 
   void _buildMarkers() {
     _markers.clear();
+    _nearestOffice = null;
+    _nearestDistance = null;
+
     for (final office in _filteredOffices) {
+      double? distance;
+
+      // Calculate distance if user location available
+      if (_currentPosition != null) {
+        distance =
+            Geolocator.distanceBetween(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+              office.latitude,
+              office.longitude,
+            ) /
+            1000; // Convert to kilometers
+
+        // Track nearest office
+        if (_nearestDistance == null || distance < _nearestDistance!) {
+          _nearestDistance = distance;
+          _nearestOffice = office;
+        }
+      }
+
+      // Use different color for nearest office
+      final isNearest =
+          _nearestOffice?.id == office.id && _currentPosition != null;
+      final hue = isNearest
+          ? BitmapDescriptor.hueGreen
+          : _markerHueForType(office.type);
+
       _markers.add(
         Marker(
           markerId: MarkerId(office.id),
           position: LatLng(office.latitude, office.longitude),
-          infoWindow: InfoWindow(title: office.name, snippet: office.address),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            _markerHueForType(office.type),
+          infoWindow: InfoWindow(
+            title: isNearest ? '⭐ NEAREST: ${office.name}' : office.name,
+            snippet: distance != null
+                ? '${office.address}\n${distance.toStringAsFixed(1)} km away'
+                : office.address,
           ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
           onTap: () => _onMarkerTapped(office),
         ),
       );
@@ -356,6 +406,96 @@ class _OfficeLocatorPageState extends State<OfficeLocatorPage> {
                     }
                   },
                 ),
+                // Nearest office card
+                if (_nearestOffice != null &&
+                    _currentPosition != null &&
+                    !_loadingLocation)
+                  Positioned(
+                    bottom: 20,
+                    left: 16,
+                    right: 16,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.green, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'NEAREST OFFICE',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (_nearestDistance != null)
+                                  Text(
+                                    '${_nearestDistance!.toStringAsFixed(1)} km',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _nearestOffice!.name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _nearestOffice!.address,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 36,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _showOfficeBottomSheet(_nearestOffice!),
+                                icon: const Icon(Icons.info_outline, size: 18),
+                                label: const Text('View Details'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 // Loading overlay
                 if (_loadingLocation)
                   const Center(

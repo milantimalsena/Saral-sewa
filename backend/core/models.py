@@ -96,7 +96,7 @@ class Document(models.Model):
     document_number = models.CharField(max_length=100)
     issue_date = models.DateField(null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
-    file = models.FileField(upload_to='documents/', blank=True, null=True)
+    document_file = models.FileField(upload_to='documents/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='valid')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
