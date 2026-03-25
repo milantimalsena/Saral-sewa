@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/document_model.dart';
@@ -31,6 +32,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
         allowMultiple: false,
+        withData: kIsWeb,
       );
 
       if (result != null && result.files.isNotEmpty) {
@@ -162,7 +164,7 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
         type: _selectedDocumentType!,
         documentNumber: _documentNumberController.text.trim(),
         expiryDate: _expiryDate,
-        filePath: _selectedFile!.path,
+        filePath: kIsWeb ? null : _selectedFile!.path,
         fileName: _selectedFile!.name,
       );
 
