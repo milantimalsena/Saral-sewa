@@ -436,10 +436,7 @@ class ApiService {
       return http.Response.fromStream(streamedResponse);
     }
 
-    var response = await sendMultipart('/documents/upload/');
-    if (response.statusCode == 404) {
-      response = await sendMultipart('/documents/');
-    }
+    var response = await sendMultipart('/documents/');
     if (response.statusCode == 401) {
       final refreshed = await _attemptTokenRefresh();
       if (!refreshed) {
