@@ -81,12 +81,9 @@ class Document(models.Model):
     ]
     DOCUMENT_TYPES = [
         ('citizenship', 'Citizenship'),
+        ('nationalId', 'National ID'),
+        ('drivingLicense', 'Driving License'),
         ('passport', 'Passport'),
-        ('driving_license', 'Driving License'),
-        ('voter_id', 'Voter ID'),
-        ('pan_card', 'PAN Card'),
-        ('birth_certificate', 'Birth Certificate'),
-        ('land_ownership', 'Land Ownership'),
         ('other', 'Other'),
     ]
 
