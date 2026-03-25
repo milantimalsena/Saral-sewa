@@ -31,92 +31,66 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Saral Sewa'),
-        elevation: 0,
-        actions: [
-          Consumer<AuthProvider>(
-            builder: (context, authProvider, _) {
-              return PopupMenuButton(
-                itemBuilder: (BuildContext context) => [
-                  PopupMenuItem(
-                    child: const Text('Profile'),
-                    onTap: () {
-                      Navigator.of(context).pushNamed('/profile');
-                    },
-                  ),
-                  PopupMenuItem(
-                    child: const Text('Sign Out'),
-                    onTap: () => _handleSignOut(context, authProvider),
-                  ),
-                ],
-              );
-            },
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        if (authProvider.user == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final user = authProvider.user!;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Welcome Card ──
+              _buildWelcomeCard(user),
+              const SizedBox(height: 28),
+
+              // ── Popular Services ──
+              _buildSectionHeader(
+                'Popular Services',
+                Icons.star,
+                Colors.amber[700]!,
+              ),
+              const SizedBox(height: 14),
+              _buildPopularServices(context, _servicesFuture),
+              const SizedBox(height: 28),
+
+              // ── My Documents ──
+              _buildSectionHeader(
+                'My Documents',
+                Icons.folder,
+                AppTheme.deepBlue,
+              ),
+              const SizedBox(height: 14),
+              _buildMyDocuments(_documentsFuture),
+              const SizedBox(height: 28),
+
+              // ── Application Progress ──
+              _buildSectionHeader(
+                'My Applications',
+                Icons.assignment,
+                AppTheme.crimsonRed,
+              ),
+              const SizedBox(height: 14),
+              _buildApplicationProgress(_applicationsFuture),
+              const SizedBox(height: 28),
+
+              // ── Notifications ──
+              _buildSectionHeader(
+                'Notifications',
+                Icons.notifications,
+                Colors.orange[700]!,
+              ),
+              const SizedBox(height: 14),
+              _buildNotifications(_notificationsFuture),
+              const SizedBox(height: 32),
+            ],
           ),
-        ],
-      ),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, _) {
-          if (authProvider.user == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final user = authProvider.user!;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Welcome Card ──
-                _buildWelcomeCard(user),
-                const SizedBox(height: 28),
-
-                // ── Popular Services ──
-                _buildSectionHeader(
-                  'Popular Services',
-                  Icons.star,
-                  Colors.amber[700]!,
-                ),
-                const SizedBox(height: 14),
-                _buildPopularServices(context, _servicesFuture),
-                const SizedBox(height: 28),
-
-                // ── My Documents ──
-                _buildSectionHeader(
-                  'My Documents',
-                  Icons.folder,
-                  AppTheme.deepBlue,
-                ),
-                const SizedBox(height: 14),
-                _buildMyDocuments(_documentsFuture),
-                const SizedBox(height: 28),
-
-                // ── Application Progress ──
-                _buildSectionHeader(
-                  'My Applications',
-                  Icons.assignment,
-                  AppTheme.crimsonRed,
-                ),
-                const SizedBox(height: 14),
-                _buildApplicationProgress(_applicationsFuture),
-                const SizedBox(height: 28),
-
-                // ── Notifications ──
-                _buildSectionHeader(
-                  'Notifications',
-                  Icons.notifications,
-                  Colors.orange[700]!,
-                ),
-                const SizedBox(height: 14),
-                _buildNotifications(_notificationsFuture),
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
-        },
-      ),
+        );
+      },
     );
   }
 

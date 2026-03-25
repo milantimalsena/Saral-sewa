@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
       child: MaterialApp(
         title: 'Saral Sewa',
-        debugShowCheckedModeBanner: false,
+        debugShowCheckedModeBanner: true,
         theme: AppTheme.theme,
         home: const _RootPage(),
         routes: {
