@@ -31,19 +31,36 @@ class ServiceModel {
     final name = json['name']?.toString() ?? 'Service';
     final nameNepali = json['name_nepali']?.toString() ?? '';
     final description = json['description']?.toString() ?? '';
-    final requiredDocsRaw = json['required_documents']?.toString() ?? '';
-    final requiredDocs = requiredDocsRaw
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
 
-    final generatedSteps = <String>[
-      'Review required documents for $name.',
-      'Prepare originals and photocopies before submitting.',
-      'Submit your application at the relevant office or online portal.',
-      'Track status from My Applications section.',
-    ];
+    // Parse steps from JSON array
+    List<String> steps = [];
+    if (json['steps'] != null && json['steps'] is List) {
+      steps = List<String>.from(
+        json['steps'].map((e) => e.toString()).toList(),
+      );
+    }
+
+    // Parse required documents from JSON array
+    List<String> requiredDocs = [];
+    if (json['required_documents'] != null &&
+        json['required_documents'] is List) {
+      requiredDocs = List<String>.from(
+        json['required_documents'].map((e) => e.toString()).toList(),
+      );
+    }
+
+    // If no steps from API, generate defaults
+    if (steps.isEmpty) {
+      steps = [
+        'Review required documents for $name.',
+        'Prepare originals and photocopies before submitting.',
+        'Submit your application at the relevant office or online portal.',
+        'Track status from My Applications section.',
+      ];
+    }
+
+    final onlineLink = json['online_link']?.toString();
+    final hasOnlineLink = onlineLink != null && onlineLink.isNotEmpty;
 
     return ServiceModel(
       id: json['id']?.toString() ?? name.toLowerCase().replaceAll(' ', '_'),
@@ -51,11 +68,12 @@ class ServiceModel {
       titleNp: nameNepali,
       icon: _iconForService(name),
       description: description,
-      steps: generatedSteps,
+      steps: steps,
       requiredDocuments: requiredDocs,
       officeNotice:
           'Visit the concerned ${json['department'] ?? 'government'} office if biometric or in-person verification is required.',
-      hasOnlineForm: true,
+      hasOnlineForm: hasOnlineLink,
+      externalUrl: onlineLink,
       formFields: const [
         FormFieldDef(label: 'Applicant Full Name', hint: 'Enter full name'),
         FormFieldDef(

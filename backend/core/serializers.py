@@ -34,12 +34,13 @@ class DocumentSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     computed_status = serializers.ReadOnlyField()
     document_type_display = serializers.SerializerMethodField()
+    document_file_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
         fields = [
             'id', 'user', 'user_name', 'document_type', 'document_type_display',
-            'document_number', 'issue_date', 'expiry_date', 'document_file', 'status',
+            'document_number', 'issue_date', 'expiry_date', 'document_file', 'document_file_url', 'status',
             'computed_status', 'notes', 'created_at', 'updated_at',
         ]
 
@@ -48,6 +49,12 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def get_document_type_display(self, obj):
         return obj.get_document_type_display()
+
+    def get_document_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.document_file and request:
+            return request.build_absolute_uri(obj.document_file.url)
+        return None
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
@@ -162,12 +169,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 class UserDocumentSerializer(serializers.ModelSerializer):
     document_type_display = serializers.SerializerMethodField(read_only=True)
     computed_status = serializers.ReadOnlyField()
+    document_file_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
         fields = [
             'id', 'document_type', 'document_type_display', 'document_number',
-            'issue_date', 'expiry_date', 'document_file', 'status', 'computed_status',
+            'issue_date', 'expiry_date', 'document_file', 'document_file_url', 'status', 'computed_status',
             'notes', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'status', 'computed_status', 'created_at', 'updated_at']
@@ -177,6 +185,12 @@ class UserDocumentSerializer(serializers.ModelSerializer):
 
     def get_document_type_display(self, obj):
         return obj.get_document_type_display()
+
+    def get_document_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.document_file and request:
+            return request.build_absolute_uri(obj.document_file.url)
+        return None
 
 
 class UserApplicationSerializer(serializers.ModelSerializer):

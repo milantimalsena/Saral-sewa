@@ -9,3 +9,10 @@ services:
     buildCommand: pip install -r backend/requirements.txt
     startCommand: gunicorn --chdir backend saralsewa.wsgi:application
     pythonVersion: "3.11"
+  
+  - type: web
+    name: saral-sewa-admin
+    env: node
+    buildCommand: cd backend/admin-dashboard && npm install && npm run build
+    startCommand: npm install -g serve && serve -s backend/admin-dashboard/dist -l 3000
+    nodeVersion: "18"

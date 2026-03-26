@@ -10,6 +10,7 @@ import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/services_page.dart';
 import 'pages/document_upload_page.dart';
+import 'pages/my_documents_page.dart';
 import 'pages/office_locator_page.dart';
 import 'services/api_service.dart';
 import 'theme.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ProfilePage(),
           '/services': (context) => const ServicesPage(),
           '/document-upload': (context) => const DocumentUploadPage(),
+          '/my-documents': (context) => const MyDocumentsPage(),
           '/office-locator': (context) => const OfficeLocatorPage(),
         },
       ),

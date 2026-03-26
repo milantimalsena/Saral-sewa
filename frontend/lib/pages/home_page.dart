@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/service_model.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
@@ -229,7 +230,31 @@ class _HomePageState extends State<HomePage> {
 
         final items = snapshot.data ?? <dynamic>[];
         if (items.isEmpty) {
-          return const Text('No documents uploaded yet.');
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.lightGrey),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.folder_open, size: 48, color: Colors.blue[300]),
+                const SizedBox(height: 8),
+                const Text(
+                  'No documents uploaded yet.',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/document-upload'),
+                  child: const Text('Upload Document'),
+                ),
+              ],
+            ),
+          );
         }
 
         return Container(
@@ -240,42 +265,62 @@ class _HomePageState extends State<HomePage> {
             border: Border.all(color: AppTheme.lightGrey),
           ),
           child: Column(
-            children: List.generate(items.length, (index) {
-              final item = items[index] as Map<String, dynamic>;
-              final status =
-                  item['computed_status']?.toString() ??
-                  item['status']?.toString() ??
-                  'valid';
-              final type =
-                  item['document_type_display']?.toString() ??
-                  item['document_type']?.toString() ??
-                  'Document';
-              final subtitle = status == 'expiring'
-                  ? 'Expiring soon'
-                  : status == 'expired'
-                  ? 'Expired'
-                  : 'Uploaded';
+            children: [
+              ...List.generate(items.length, (index) {
+                final item = items[index] as Map<String, dynamic>;
+                final status =
+                    item['computed_status']?.toString() ??
+                    item['status']?.toString() ??
+                    'valid';
+                final type =
+                    item['document_type_display']?.toString() ??
+                    item['document_type']?.toString() ??
+                    'Document';
+                final subtitle = status == 'expiring'
+                    ? 'Expiring soon'
+                    : status == 'expired'
+                    ? 'Expired'
+                    : 'Uploaded';
+                final fileUrl = item['document_file_url'];
 
-              return Column(
-                children: [
-                  _DocumentRow(
-                    icon: status == 'expiring'
-                        ? Icons.warning_amber_rounded
-                        : status == 'expired'
-                        ? Icons.error
-                        : Icons.check_circle,
-                    iconColor: status == 'expiring'
-                        ? Colors.orange
-                        : status == 'expired'
-                        ? Colors.red
-                        : Colors.green,
-                    title: type,
-                    subtitle: subtitle,
+                return Column(
+                  children: [
+                    InkWell(
+                      onTap: fileUrl != null
+                          ? () => _openDocument(fileUrl)
+                          : null,
+                      child: _DocumentRow(
+                        icon: status == 'expiring'
+                            ? Icons.warning_amber_rounded
+                            : status == 'expired'
+                            ? Icons.error
+                            : Icons.check_circle,
+                        iconColor: status == 'expiring'
+                            ? Colors.orange
+                            : status == 'expired'
+                            ? Colors.red
+                            : Colors.green,
+                        title: type,
+                        subtitle: subtitle,
+                      ),
+                    ),
+                    if (index < items.length - 1) const Divider(height: 1),
+                  ],
+                );
+              }),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/my-documents'),
+                    icon: const Icon(Icons.visibility),
+                    label: const Text('View All Documents'),
                   ),
-                  if (index < items.length - 1) const Divider(height: 1),
-                ],
-              );
-            }),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -454,6 +499,34 @@ class _HomePageState extends State<HomePage> {
       if (context.mounted) {
         Navigator.of(context).pushReplacementNamed('/login');
       }
+    }
+  }
+
+  Future<void> _openDocument(String? url) async {
+    if (url == null || url.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Document file not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error opening document: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }
