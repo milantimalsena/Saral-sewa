@@ -171,12 +171,23 @@ class ApiService {
       return <String, dynamic>{};
     }
 
-    final decoded = jsonDecode(rawBody);
-    if (decoded is Map<String, dynamic>) {
-      return decoded;
+    try {
+      final decoded = jsonDecode(rawBody);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return {'data': decoded};
+    } on FormatException {
+      // Handle HTML error pages or non-JSON responses
+      if (rawBody.toString().contains('DOCTYPE') ||
+          rawBody.toString().contains('<html>')) {
+        return {
+          'error': 'Server returned HTML instead of JSON',
+          'raw': rawBody,
+        };
+      }
+      return {'error': 'Invalid JSON response: $rawBody'};
     }
-
-    return {'data': decoded};
   }
 
   String _extractMessage(

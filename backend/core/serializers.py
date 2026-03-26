@@ -171,6 +171,9 @@ class UserDocumentSerializer(serializers.ModelSerializer):
             'notes', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'status', 'computed_status', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'document_file': {'required': True},
+        }
 
     def get_document_type_display(self, obj):
         return obj.get_document_type_display()

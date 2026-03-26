@@ -44,6 +44,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'saralsewa.urls'
 
+APPEND_SLASH = False
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -106,6 +108,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 }
 
 # ---------- JWT ----------
@@ -126,10 +129,10 @@ USE_I18N = True
 USE_TZ = True
 
 # ---------- STATIC & MEDIA ----------
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
