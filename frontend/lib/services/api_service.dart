@@ -470,6 +470,26 @@ class ApiService {
     return patch('/notifications/$notificationId/', {'is_read': true});
   }
 
+  Future<dynamic> createShareChecklist({
+    required String serviceId,
+    required List<Map<String, dynamic>> checklistItems,
+  }) async {
+    return post('/share/create/', {
+      'service_id': serviceId,
+      'checklist_data': {
+        'items': checklistItems,
+      },
+    });
+  }
+
+  Future<dynamic> getSharedChecklists() async {
+    return get('/share/list/');
+  }
+
+  Future<dynamic> getPublicChecklist(String shareToken) async {
+    return get('/share/public/$shareToken/');
+  }
+
   Future<void> logout() async {
     try {
       if (_refreshToken != null && _refreshToken!.isNotEmpty) {

@@ -173,3 +173,25 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ShareChecklist(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_checklists')
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='shared_checklists')
+    checklist_data = models.JSONField(default=dict, help_text='Checked items and progress')
+    share_token = models.CharField(max_length=32, unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.service.name} ({self.created_at.date()})"
+
+    def save(self, *args, **kwargs):
+        if not self.share_token:
+            import secrets
+            self.share_token = secrets.token_urlsafe(24)
+        super().save(*args, **kwargs)

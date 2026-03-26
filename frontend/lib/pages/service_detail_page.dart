@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/service_model.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
@@ -43,6 +44,43 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     super.dispose();
   }
 
+  void _shareChecklist() {
+    final service = widget.service;
+    final checkedCount = _checkedDocuments.where((v) => v).length;
+    final total = service.requiredDocuments.length;
+
+    // Build checklist items for API
+    List<Map<String, dynamic>> checklistItems = [];
+    for (int i = 0; i < service.requiredDocuments.length; i++) {
+      checklistItems.add({
+        'name': service.requiredDocuments[i],
+        'checked': _checkedDocuments[i],
+      });
+    }
+
+    // Build share message
+    String message = '🇳🇵 Saral Sewa - ${service.title}\n';
+    message += '${service.titleNp}\n\n';
+    message += '📋 Checklist:\n';
+
+    for (int i = 0; i < service.requiredDocuments.length; i++) {
+      message += _checkedDocuments[i]
+          ? '✅ ${service.requiredDocuments[i]}\n'
+          : '⬜ ${service.requiredDocuments[i]}\n';
+    }
+
+    message += '\n📊 Progress: $checkedCount/$total completed\n';
+    message += '\n---\n';
+    message += 'Shared via Saral Sewa App 📱\n';
+    message += 'Simplifying Government Services';
+
+    // Share using native share dialog
+    Share.share(
+      message,
+      subject: 'Saral Sewa - ${service.title} Checklist',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final service = widget.service;
@@ -52,6 +90,13 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         title: Text(service.title),
         backgroundColor: AppTheme.crimsonRed,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareChecklist,
+            tooltip: 'Share Checklist',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

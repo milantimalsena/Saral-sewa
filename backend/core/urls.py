@@ -35,6 +35,11 @@ urlpatterns = [
     path('admin/dashboard/', views.AdminDashboardView.as_view(), name='admin-dashboard'),
     path('admin/check-expiry/', views.check_expiring_documents, name='check-expiry'),
 
+    # Share Checklist
+    path('share/create/', views.CreateShareChecklistView.as_view(), name='create-share-checklist'),
+    path('share/list/', views.ShareChecklistListView.as_view(), name='share-checklist-list'),
+    path('share/public/<str:share_token>/', views.PublicShareChecklistView.as_view(), name='public-share-checklist'),
+
     # Router URLs (admin + user)
     path('', include(admin_router.urls)),
     path('', include(user_router.urls)),

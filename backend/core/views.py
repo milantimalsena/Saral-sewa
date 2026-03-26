@@ -9,12 +9,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import User, Document, Application, Notification, Service
+from .models import User, Document, Application, Notification, Service, ShareChecklist
 from .serializers import (
     UserSerializer, UserListSerializer, DocumentSerializer,
     ApplicationSerializer, NotificationSerializer, ServiceSerializer,
     RegisterSerializer, LoginSerializer, ProfileSerializer,
     UserDocumentSerializer, UserApplicationSerializer,
+    ShareChecklistSerializer, PublicChecklistSerializer,
 )
 
 
@@ -318,3 +319,59 @@ class UserNotificationViewSet(viewsets.ModelViewSet):
         notification.is_read = True
         notification.save()
         return Response(NotificationSerializer(notification).data)
+
+
+class CreateShareChecklistView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        service_id = request.data.get('service_id')
+        checklist_data = request.data.get('checklist_data', {})
+
+        try:
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return Response({'error': 'Service not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        share_checklist = ShareChecklist.objects.create(
+            user=request.user,
+            service=service,
+            checklist_data=checklist_data,
+        )
+
+        serializer = ShareChecklistSerializer(share_checklist, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ShareChecklistListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ShareChecklistSerializer
+
+    def get_queryset(self):
+        return ShareChecklist.objects.filter(user=self.request.user)
+
+
+class PublicShareChecklistView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, share_token):
+        try:
+            share_checklist = ShareChecklist.objects.get(share_token=share_token)
+        except ShareChecklist.DoesNotExist:
+            return Response({'error': 'Checklist not found or link expired'}, status=status.HTTP_404_NOT_FOUND)
+
+        service = share_checklist.service
+        checklist_items = share_checklist.checklist_data.get('items', [])
+        checked_count = sum(1 for item in checklist_items if item.get('checked', False))
+        total_count = len(checklist_items)
+
+        data = {
+            'service_title': service.name,
+            'service_title_np': service.name_nepali,
+            'checklist_items': checklist_items,
+            'progress': f"{checked_count}/{total_count} completed",
+            'shared_by': share_checklist.user.full_name,
+            'created_at': share_checklist.created_at,
+        }
+
+        return Response(data)

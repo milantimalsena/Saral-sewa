@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from .models import User, Document, Application, Notification, Service
+from .models import User, Document, Application, Notification, Service, ShareChecklist
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -210,3 +210,33 @@ class UserApplicationSerializer(serializers.ModelSerializer):
 
     def get_status_display(self, obj):
         return obj.get_status_display()
+
+class ShareChecklistSerializer(serializers.ModelSerializer):
+    service_name = serializers.CharField(source='service.name', read_only=True)
+    service_title_np = serializers.CharField(source='service.name_nepali', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    share_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShareChecklist
+        fields = [
+            'id', 'share_token', 'share_url', 'service', 'service_name',
+            'service_title_np', 'user_email', 'checklist_data', 'created_at', 'expires_at',
+        ]
+        read_only_fields = ['id', 'share_token', 'created_at']
+
+    def get_share_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            domain = request.get_host()
+            return f"https://{domain}/share/checklist/{obj.share_token}/"
+        return f"/share/checklist/{obj.share_token}/"
+
+
+class PublicChecklistSerializer(serializers.Serializer):
+    service_title = serializers.CharField()
+    service_title_np = serializers.CharField()
+    checklist_items = serializers.ListField()
+    progress = serializers.CharField()
+    shared_by = serializers.CharField()
+    created_at = serializers.DateTimeField()
